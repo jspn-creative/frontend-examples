@@ -1,0 +1,17 @@
+---
+description: 
+globs: *.server.ts, +server.ts
+---
+# Current Path Aliases:
+
+- "@components": "./src/components"
+- "@utils": "./src/utils"
+- "@utils.js": "./src/utils"
+- "@hooks": "./src/hooks"
+- "@src": "./src"
+- "@server": "./src/lib/server"
+- "@api": "./src/lib/api"
+- "@types": "./src/types"
+- "@schemas": "./src/schemas"
+- "@state": "./src/lib/state"
+- "@db": "./src/lib/server/db"

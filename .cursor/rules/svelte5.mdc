@@ -1,0 +1,157 @@
+---
+description: Svelte 5
+globs: *.svelte, *.svelte.ts
+alwaysApply: false
+---
+## Svelte 5 Syntax
+
+Please remember to always use Svelte 5 syntax. For example:
+- Use the new runes syntax (`$state`, `$derived`, etc.) to manage reactive state variables instead of the `$: ` syntax of Svelte 4.
+- Use the new event handler syntax  (onclick instead of on:click - the colon should not be included)
+- Use snippets instead of slots.
+- Use the `$props()` syntax to extract props, never use the old `export let props` syntax (e.g. `let { optionalProp = 42, requiredProp } = $props();`)
+- Always type `$props`.
+- Use `$app/state` instead of `$app/stores`, then you can just access state objects like `page.url.pathname`.
+- Seriously: never use `$:` again please.
+
+### Svelte 4 to Svelte 5 changes:
+#### Reactivity Syntax Changes
+
+- `let` -> `$state`: Reactive variables are declared with `$state`.
+- `$:` -> `$derived` / `$effect`: Derived state uses `$derived`, side effects use `$effect`.
+- `export let` -> `$props`: Component props are declared with `$props` and destructuring.
+    - Renaming: `let { class: klass } = $props();`
+    - Other properties: `let { foo, bar, ...rest } = $props();`
+    - All properties: `let props = $props();`
+
+#### Event Changes from on:click to onclick (on:submit to onsubmit)
+
+- `on:` directive removed, event handlers are now regular properties.
+    - `<button onclick={() => count++}>`
+    - Shorthand: `<button {onclick}>`
+- `createEventDispatcher` deprecated, use callback props instead.
+- Event bubbling: components accept `onclick` callback prop instead of forwarding.
+- Event modifiers:
+    - Use wrapper functions (e.g., `once`, `preventDefault`).
+    - `capture` modifier added to event name: `<button onclickcapture={...}>`.
+    - `passive` and `nonpassive` require manual event handler application using actions.
+- Multiple event handlers: Call handlers sequentially within a single `onclick`.
+- When spreading props, local handlers must go after the spread.
+
+#### Snippets Instead of Slots
+
+- Slots deprecated, replaced by snippets ( `{@render ...}` ).
+- Slots still work, and snippets can be passed to components using slots.
+- Default content: Use `children` prop and `{@render children?.()}`.
+- Multiple content placeholders: Use named props and `{@render ...}`.
+- Passing data back up: Use snippets with parameters.
+
+#### Components Are No Longer Classes
+
+- Components are functions, instantiated with `mount` or `hydrate` from `svelte`.
+- `mount` and `hydrate` return an object with component exports and property accessors.
+- `$on` -> `events` property in `mount` options.
+- `$set` -> `$state` for reactive property objects.
+- `$destroy` -> `unmount`.
+- `createClassComponent` or `asClassComponent` from `svelte/legacy` for compatibility.
+- `mount` and `hydrate` are not synchronous, use `flushSync` if needed.
+
+#### Component Typing Changes
+
+- `SvelteComponent` deprecated, use `Component` type.
+- `ComponentEvents` and `ComponentType` deprecated.
+
+#### Breaking Changes in Runes Mode
+
+- Bindings to component exports not allowed, use `bind:this`.
+- Bindings need to be explicitly defined using `$bindable()`.
+- `accessors` option ignored.
+- `immutable` option ignored.
+- Classes are no longer "auto-reactive".
+- `onwheel`, `onmousemovewheel`, `ontouchstart`, `ontouchmove` handlers are passive.
+
+#### Other Changes
+
+- `:is(...)` and `:where(...)` are scoped.
+- Scoped CSS uses `:where(...)`.
+- `oneventname` attributes no longer accept string values.
+- `bind:files` values can only be `null`, `undefined`, or `FileList`.
+- Bindings now react to form resets.
+- `<slot>` elements in declarative shadow roots are preserved.
+- `<svelte:element>` tag must be an expression.
+- `mount` plays transitions by default.
+- `onevent` attributes are delegated.
+- `<foo.bar>` creates a component, not an element.
+- `bind:this` now returns instance exports and property accessors, not a class instance.
+- `<svelte:component>` is no longer necessary. Components are dynamic by default. `<Thing />` and `<svelte:component this={Thing} />` are equivalent.
+
+## Current Path Aliases:
+- "@components": "./src/components"
+- "@utils": "./src/utils"
+- "@utils.js": "./src/utils"
+- "@hooks": "./src/hooks"
+- "@src": "./src"
+- "@server": "./src/lib/server"
+- "@api": "./src/lib/api"
+- "@types": "./src/types"
+- "@schemas": "./src/schemas"
+- "@state": "./src/lib/state"
+- "@db": "./src/lib/server/db"
+
+## Tooling
+In this project, we use Tailwind CSS for styling and shacn-svelte as the UI component library (built on top of Bits UI). It is a port of shadcn/ui to Svelte. You can use their CLI to install all the same shadcn components by running this command `bunx shadcn-svelte@next add <component-1> <component-2>`, just like the original React version.
+- Never install components if they already exist.
+- Do not overwrite components that have been customized.
+
+## UI and Styling
+- Always use Tailwind CSS ^v4. Make use of arbitrary variants as needed.
+- Leverage Shadcn/svelte components for pre-built, customizable UI elements.
+- Import Shadcn components from `$lib/components/ui`.
+- Organize Tailwind classes using the `cn()` utility from `$lib/utils`.
+- Use Svelte's built-in transition and animation features.
+
+## Examples
+### State Management
+- Use classes for complex state management (state machines):
+  ```typescript
+  // counter.svelte.ts
+  class Counter {
+    count = $state(0);
+    incrementor = $state(1);
+    
+    increment() {
+      this.count += this.incrementor;
+    }
+    
+    resetCount() {
+      this.count = 0;
+    }
+    
+    resetIncrementor() {
+      this.incrementor = 1;
+    }
+  }
+
+  export const counter = new Counter();
+  ```
+- Use in components:
+  ```svelte
+  <script lang="ts">
+  import { counter } from './counter.svelte.ts';
+  </script>
+
+  <button on:click={() => counter.increment()}>
+    Count: {counter.count}
+  </button>
+  ```
+
+### Typing Props
+```svelte
+<script lang="ts">
+	interface Props {
+		adjective: string;
+	}
+
+	let { adjective }: Props = $props();
+</script>
+```

@@ -1,0 +1,11 @@
+---
+description: 
+globs: *.svelte,*.svelte.ts,*.js,*.ts
+alwaysApply: false
+---
+## Always prefer TailwindCSS over CSS classes
+- Use arbitrary variants when necessary.
+
+## Snippets/examples I like to use
+- `[--gap:15px] md:[--gap:22px]`
+- Increase touch target size: `<span class="absolute top-1/2 left-1/2 size-full min-h-12 min-w-12 -translate-1/2 [@media(pointer:fine)]:hidden"></span>`
