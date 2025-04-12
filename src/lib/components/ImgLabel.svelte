@@ -93,7 +93,7 @@
 </div>
 
 {#snippet corner({ edge, alignment, rotation }: CornerConfig)}
-  <div class="absolute size-4 {edge === 'top' && alignment === 'start' ? '-top-4 left-0' : edge === 'top' && alignment === 'end' ? '-top-4 right-0' : edge === 'right' && alignment === 'start' ? 'top-0 -right-4' : edge === 'right' && alignment === 'end' ? 'bottom-0 -right-4' : edge === 'bottom' && alignment === 'start' ? '-bottom-4 left-0' : edge === 'bottom' && alignment === 'end' ? '-bottom-4 right-0' : edge === 'left' && alignment === 'start' ? 'top-0 -left-4' : '-left-4 bottom-0'}">
+  <div class="absolute size-4 {edge === 'top' && alignment === 'start' ? 'top-start -top-4 left-0' : edge === 'top' && alignment === 'end' ? 'top-end -top-4 right-0' : edge === 'right' && alignment === 'start' ? 'right-start top-0 -right-4 ' : edge === 'right' && alignment === 'end' ? 'right-end bottom-0 -right-4' : edge === 'bottom' && alignment === 'start' ? 'bottom-start -bottom-4 left-0' : edge === 'bottom' && alignment === 'end' ? 'bottom-end -bottom-4 right-0' : edge === 'left' && alignment === 'start' ? 'left-start top-0 -left-4' : '-left-4 bottom-0'}">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-full h-full" style="transform: rotate({rotation}deg)">
       <path d="M100 100 V0 H0 A100 100 0 0 1 100 100" fill="var(--color)" />
     </svg>
