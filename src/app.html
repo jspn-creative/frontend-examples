@@ -1,15 +1,60 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%sveltekit.assets%/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    %sveltekit.head%
+  </head>
+  <body data-splash-skip="%splash-skip%">
+    <div class="fixed bg-background z-10 inset-0 items-center justify-center text-foreground text-2xl" aria-disabled id="splash-target">
+      <script>
+        function stamp() {
+          document.documentElement.setAttribute("data-splashed-at", new Date().toISOString());
+        }
+      </script>
+      <div class="transform transition-transform" id="splash-content">jspn<span class="font-bold">creative</span></div>
+    </div>
+    <div data-sveltekit-preload-data="hover" id="splash-reveal" class="fixed h-screen inset-0 transform transition-transform pointer-events-auto">
+      <script>
+        const isInIframe = window.self !== window.top;
+        const shouldSkipSplash = isInIframe || document.body.getAttribute("data-splash-skip") === "true";
 
-<head>
-	<meta charset="utf-8" />
-	<link rel="icon" href="%sveltekit.assets%/favicon.png" />
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	%sveltekit.head%
-</head>
+        const splashEl = document.getElementById("splash-target");
 
-<body data-sveltekit-preload-data="hover">
-	<div style="display: contents">%sveltekit.body%</div>
-</body>
+        if (shouldSkipSplash) {
+        //   stamp();
+          console.log("splash skip", isInIframe ? "(iframe)" : "(middleware)");
+          splashEl.remove();
 
+          const splashReveal = document.getElementById("splash-reveal");
+          if (splashReveal) {
+            splashReveal.id = "content";
+            splashReveal.style.position = "static";
+            splashReveal.style.transform = "none";
+          }
+        } else {
+          if (!splashEl) {
+            stamp();
+            console.log("splash skip (no element)");
+          } else {
+            console.log("splashing");
+            splashEl.id = "splash";
+            // Remove splash element
+            let animationsCompleted = 0;
+            splashEl.addEventListener("animationend", (e) => {
+              if (!splashEl.isSameNode(e.target)) return;
+              animationsCompleted++;
+
+              if (animationsCompleted === 2) {
+                splashEl.remove();
+                stamp();
+              }
+            });
+          }
+        }
+      </script>
+      %sveltekit.body%
+    </div>
+  </body>
 </html>
