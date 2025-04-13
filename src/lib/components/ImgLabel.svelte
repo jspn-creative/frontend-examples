@@ -61,13 +61,13 @@
       <span class="text-gray-500">Failed to load image</span>
     </div>
   {:else}
-    <div class="relative *:relative w-full h-full rounded-{rounded} overflow-hidden *:duration-[2000ms] *:transition-opacity">
+    <div class=" inset-shadow-sm/100 relative *:relative w-full h-full rounded-{rounded} overflow-hidden *:duration-[2000ms] *:transition-opacity">
       {#if typeof src !== "function"}
         <img
           {src}
           {alt}
           {loading}
-          class="object-cover w-full h-full opacity-0"
+          class="opacity-0 object-cover w-full h-full"
           onload={(e) => e.currentTarget.classList.remove("opacity-0")}
           onerror={() => {
             imgError = true;
