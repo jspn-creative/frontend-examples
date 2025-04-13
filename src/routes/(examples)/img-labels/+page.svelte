@@ -1,6 +1,30 @@
 <script lang="ts">
   import { scramble } from "$lib/actions/scramble";
   import ImgLabel from "$lib/components/ImgLabel.svelte";
+  import TooltipAvatars from "$lib/components/ui/tooltipAvatars/tooltipAvatars.svelte";
+  import * as Avatar from "$lib/components/ui/avatar/index.js";
+  const people = [
+    {
+      id: 1,
+      name: "Robert Johnson",
+      designation: "Product Manager",
+      image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
+    },
+
+    {
+      id: 2,
+      name: "Emily Davis",
+      designation: "UX Designer",
+      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGF2YXRhcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60",
+    },
+
+    {
+      id: 3,
+      name: "Dora",
+      designation: "The Explorer",
+      image: "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3534&q=80",
+    },
+  ];
 
   const sampleTexts = ["What if?", "Who is this?", "When did I say that?", "Where is it?", "Now why did I do that?"];
   const longerSampleTexts = ["What if?", "What if you never knew, but, like, you really wanted to know?", "Who is this person to you? Your dad or your girlfriend?", "When did I say that? Oh, yeah... Venezuela. I thought I had forgotten that part of my life forever.", "Where is that thing you lost? No, I'm talking about your dignity you low-down bastard.", "Now why did I do that? I don't know, but I'm sure it was for the an excellent reason."];
@@ -38,14 +62,26 @@
   </div> -->
 
     <ImgLabel src="https://framerusercontent.com/images/yzpRxn2HI5TBopZVeE1K1WuVA.jpg" position="top-right" color="var(--color-secondary-foreground)" class="h-[25rem] row-span-2">
-      <p class="text-secondary py-4 pr-2 pl-6 text-xl">
+      <p class="text-secondary text-xl py-4 pr-2 pl-6 text-x">
         <span use:scramble={{ texts: longerSampleTexts, interval: 3000, scrambleTime: 50 }}> Loading... </span>
       </p>
     </ImgLabel>
-    <ImgLabel src="https://framerusercontent.com/images/rQXeeWMbrXXzxko63WI4Z1ZVIk.jpg" position="bottom-left" color="var(--color-secondary-foreground)" class="h-48 ">
-      <p class="text-secondary py-4 pr-2 pl-6 text-xl">
-        <span use:scramble={{ texts: sampleTexts, interval: 3000, scrambleTime: 50 }}> Loading... </span>
-      </p>
+    <ImgLabel rounded="4xl" src="https://framerusercontent.com/images/rQXeeWMbrXXzxko63WI4Z1ZVIk.jpg" position="bottom-left" color="var(--color-secondary-foreground)" class="h-48">
+      <!-- Stacked avatars -->
+      <!-- {#each people as person}
+        <Avatar.Root class="-ml-2">
+          <Avatar.Image src={person.image} alt={person.name} />
+          <Avatar.Fallback>CN</Avatar.Fallback>
+        </Avatar.Root>
+      {/each} -->
+
+      <div class="h-full w-full flex items-center gap-2 justify-center p-4">
+        <div class=" flex flex-col text-xs/3 items-end font-medium text-secondary">
+          <p>Top rated</p>
+          <p class="text-accent font-bold text-base/5">agents:</p>
+        </div>
+        <TooltipAvatars items={people} />
+      </div>
     </ImgLabel>
 
     <ImgLabel position="bottom-right" color="var(--color-secondary-foreground)" class="row-span-2 h-[25rem]">

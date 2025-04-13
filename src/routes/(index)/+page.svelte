@@ -4,7 +4,8 @@
   import { toast } from "svelte-sonner";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu2/index.js";
+  import { onMount } from "svelte";
 
   type Route = {
     path: string;
@@ -25,63 +26,47 @@
   let mouseX = $state(0);
   let mouseY = $state(0);
   let hoveredRouteIndex = $state<number | null>(null);
+  let hoveredRoutes = $state<number[]>([]);
   let previewsLoaded = $state<boolean[]>([]);
-  let previewsContainer: HTMLDivElement;
+  let previewsContainer: HTMLDivElement | null = $state(null);
   let searchQuery = $state("");
   let sortOrder = $state<"asc" | "desc">("asc");
   let activeStatusFilter = $state<"WIP" | "Completed" | "Inactive" | null>(null);
   let activeTagFilter = $state<string | null>(null);
   let isGeneratingMetadata = $state(false);
+  let visiblePreviews = $state<Set<number>>(new Set());
+  let previewObserver: IntersectionObserver | null = $state(null);
 
   const currentPath = $derived(page.url.pathname);
 
-  // Check if a route matches the current path
   function isCurrentRoute(routePath: string): boolean {
-    // Strip any trailing slash from both paths for comparison
     const normalizedCurrentPath = currentPath.endsWith("/") ? currentPath.slice(0, -1) : currentPath;
-
     const normalizedRoutePath = routePath.endsWith("/") ? routePath.slice(0, -1) : routePath;
-
     return normalizedCurrentPath === normalizedRoutePath;
   }
 
-  // Process and filter routes
   const sortedAndFilteredRoutes = $derived(
     (() => {
       if (!routes.length) return [];
-
-      // First apply all filters
       let filtered = [...routes];
-
-      // Filter by search query
       if (searchQuery) {
         filtered = filtered.filter((route) => route.name.toLowerCase().includes(searchQuery.toLowerCase()) || route.path.toLowerCase().includes(searchQuery.toLowerCase()));
       }
-
-      // Filter by status
       if (activeStatusFilter !== null) {
         filtered = filtered.filter((route) => route.status === activeStatusFilter);
       }
-
-      // Filter by tag
       if (activeTagFilter) {
         filtered = filtered.filter((route) => route.tags?.some((tag) => tag === activeTagFilter));
       }
-
-      // Then sort the filtered results
       return filtered.sort((a, b) => {
-        // Home is always first
         if (a.path === "/") return -1;
         if (b.path === "/") return 1;
-
-        // Otherwise sort alphabetically by name
         const sortFactor = sortOrder === "asc" ? 1 : -1;
         return sortFactor * a.name.localeCompare(b.name);
       });
     })()
   );
 
-  // Get all unique tags from routes
   const uniqueTags = $derived(
     (() => {
       if (!routes.length) return [];
@@ -102,13 +87,51 @@
   });
 
   $effect(() => {
-    // Initialize previewsLoaded array based on routes length
     if (routes.length > 0) {
       previewsLoaded = Array(routes.length).fill(false);
     }
-    console.log("routes", routes);
-    console.log("sortedAndFilteredRoutes", sortedAndFilteredRoutes);
   });
+
+  onMount(() => {
+    previewObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const iframe = entry.target;
+          const indexAttr = iframe.getAttribute("data-index");
+
+          if (entry.isIntersecting && indexAttr) {
+            const index = parseInt(indexAttr, 10);
+            if (!visiblePreviews.has(index)) {
+              visiblePreviews.add(index);
+              visiblePreviews = new Set(visiblePreviews); // Trigger reactivity
+            }
+          }
+        });
+      },
+      { rootMargin: "100px", threshold: 0.1 }
+    );
+
+    return () => {
+      if (previewObserver) {
+        previewObserver.disconnect();
+      }
+    };
+  });
+
+  function observeElement(node: HTMLElement, index: number) {
+    if (previewObserver) {
+      node.setAttribute("data-index", index.toString());
+      previewObserver.observe(node);
+
+      return {
+        destroy() {
+          if (previewObserver) {
+            previewObserver.unobserve(node);
+          }
+        },
+      };
+    }
+  }
 
   async function fetchRoutes() {
     try {
@@ -146,6 +169,8 @@
 
   function handleRouteMouseEnter(index: number) {
     hoveredRouteIndex = index;
+    !hoveredRoutes.includes(index) ? hoveredRoutes.push(index) : null;
+    // console.log("hoveredRoutes", $state.snapshot(hoveredRoutes));
   }
 
   function handleRouteMouseLeave() {
@@ -162,23 +187,16 @@
     sortOrder = sortOrder === "asc" ? "desc" : "asc";
   }
 
-  // Generate metadata for a route
   async function generateMetadata(route: Route) {
     try {
       isGeneratingMetadata = true;
-
-      // Use internalPath if available (for file system operations), otherwise use path
       const routePath = route.internalPath || route.path;
-
-      // Make sure routePath has the correct format when sent to the API
       const formattedPath = routePath.startsWith("/") ? routePath : `/${routePath}`;
-
       const response = await fetch(`/api/generate-metadata?routePath=${encodeURIComponent(formattedPath)}`);
       const data = await response.json();
 
       if (response.ok) {
         if (data.success) {
-          // Show success toast with file path
           toast.success(`${data.message}`, {
             action: data.filePath
               ? {
@@ -188,8 +206,6 @@
               : undefined,
             duration: 8000,
           });
-
-          // Refetch routes to get updated metadata
           try {
             const fetchResponse = await fetch("/api/routes?directory=(examples)");
             if (fetchResponse.ok) {
@@ -212,51 +228,44 @@
     }
   }
 
-  // Check if a route has metadata
   function hasMetadata(route: Route): boolean {
     return !!(route.status || route.note || route.tags || route.featured);
   }
 
-  // Function to handle the metadata button click to ensure proper event handling
   function handleMetadataButtonClick(event: MouseEvent, route: Route) {
-    // Prevent default browser behavior
     event.preventDefault();
-    // Stop propagation to parent elements
     event.stopPropagation();
-    // Call the metadata generation function with the route
     generateMetadata(route);
-    // Return false to prevent default and bubble up
     return false;
   }
 
   function openInEditor(filePath: string) {
-    // Support multiple editors
-    // We'll open with VS Code by default, but you can modify this to your preferred editor
-
-    // Fix for macOS paths - VS Code needs the file:// prefix for macOS
     const isAbsolutePath = filePath.startsWith("/");
     const vscodePath = isAbsolutePath ? `vscode://file/${filePath}` : `vscode://file/${window.location.origin}/${filePath}`;
 
-    // Common editor URL protocols:
     const editors = {
       vscode: vscodePath,
+      cursor: `cursor://open?url=file://${encodeURIComponent(filePath)}`,
       webstorm: `webstorm://open?file=${filePath}`,
       atom: `atom://core/open/file?filename=${encodeURIComponent(filePath)}`,
       sublime: `subl://open?url=file://${encodeURIComponent(filePath)}`,
-      // Add more editors as needed
     };
 
-    // Open in VS Code by default
-    window.open(editors.vscode);
+    window.open(editors.cursor);
 
-    // You could also make this configurable with a dropdown
-    // or let the user choose their preferred editor
+    // TODO: Make this configurable with a dropdown?
   }
 </script>
 
+<svelte:head>
+  {#each sortedAndFilteredRoutes as route}
+    <link rel="preconnect" href={route.path} />
+  {/each}
+</svelte:head>
+
 <svelte:window onmousemove={handleMouseMove} />
 
-<div class="min-h-screen h-full w-full bg-black text-white flex flex-col relative overflow-hidden">
+<div class="min-h-screen h-full w-full bg-black text-white flex flex-col relative overflow-auto">
   <!-- Background -->
   <div class="absolute bottom-0 left-0 right-0 top-0 opacity-50 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_150%_40%_at_50%_0%,#000_30%,transparent_50%),radial-gradient(ellipse_150%_60%_at_50%_100%,#000_0%,transparent_50%)]"></div>
   <main class="container mx-auto flex-1 py-16 px-4 relative z-10 max-w-7xl">
@@ -444,10 +453,11 @@
       <div class="grid grid-cols-1 grid-rows-1 mb-12">
         <!-- Grid View -->
         <div
+          id="grid-view"
           class="col-start-1 row-start-1 w-full transition-all duration-300 ease-in-out
-                {isGridView ? 'opacity-100 blur-0 translate-y-0 z-10' : 'opacity-0 blur-sm translate-y-1 -z-10 pointer-events-none'}"
+                {isGridView ? 'opacity-100 blur-0 translate-y-0 z-10' : 'h-0 overflow-clip opacity-0 blur-sm translate-y-1 -z-10 pointer-events-none'}"
         >
-          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {#each sortedAndFilteredRoutes as route, i}
               <a
                 href={route.path}
@@ -457,13 +467,20 @@
                 <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                 {#if showPreviews}
-                  <div class="relative aspect-video w-full overflow-hidden bg-zinc-950 rounded-md mb-3">
+                  <div class="relative aspect-video w-full overflow-hidden bg-zinc-950 rounded-md mb-3" use:observeElement={i}>
                     {#if isCurrentRoute(route.path)}
                       <div class="absolute top-2 right-2 z-20 flex items-center gap-1 bg-black/60 px-1.5 py-0.5 rounded text-xs uppercase text-white/90">Active</div>
                     {/if}
                     <div class="w-full h-full absolute inset-0 z-10 opacity-70 bg-gradient-to-b from-transparent via-transparent to-zinc-950/80 group-hover:opacity-0 transition-opacity duration-300"></div>
                     <div class="w-full h-full absolute inset-0 z-[5] opacity-80 group-hover:opacity-0 transition-all duration-300 pattern"></div>
-                    <iframe src={route.path} title={route.name} class="w-[200%] h-[200%] scale-[0.5] origin-top-left border-0 pointer-events-none" loading="lazy" sandbox="allow-scripts"></iframe>
+
+                    {#if visiblePreviews.has(i) || isCurrentRoute(route.path)}
+                      <iframe src={route.path} title={route.name} class="w-[200%] h-[200%] scale-[0.5] origin-top-left border-0 pointer-events-none" loading="lazy" sandbox="allow-scripts"></iframe>
+                    {:else}
+                      <div class="absolute inset-0 flex items-center justify-center bg-zinc-900">
+                        <div class="w-6 h-6 rounded-full border border-zinc-700 border-t-primary animate-pulse"></div>
+                      </div>
+                    {/if}
                   </div>
                 {/if}
 
@@ -539,6 +556,7 @@
 
         <!-- List View -->
         <div
+          id="list-view"
           class="col-start-1 row-start-1 w-full transition-all duration-300 ease-in-out
                 {!isGridView ? 'opacity-100 blur-0 translate-y-0 z-10' : 'opacity-0 blur-sm translate-y-1 -z-10 pointer-events-none'}"
         >
@@ -697,7 +715,9 @@
                   </div>
                 {/if}
 
-                <iframe src={route.path} title={route.name} class="w-[250%] h-[250%] scale-[0.4] origin-top-left border-0 pointer-events-none" loading="eager" sandbox="allow-scripts" onload={() => handleIframeLoad(i)}></iframe>
+                {#if hoveredRoutes.includes(i)}
+                  <iframe src={route.path} title={route.name} class="w-[250%] h-[250%] scale-[0.4] origin-top-left border-0 pointer-events-none" loading="lazy" sandbox="allow-scripts" onload={() => handleIframeLoad(i)}></iframe>
+                {/if}
 
                 <div class="absolute bottom-2 left-2 right-2 text-xs uppercase text-zinc-400 truncate z-20">
                   <span class="text-zinc-300 mr-1">Preview:</span>
