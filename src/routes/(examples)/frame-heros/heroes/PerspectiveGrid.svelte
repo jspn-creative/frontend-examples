@@ -1,9 +1,136 @@
 <script lang="ts">
   import Particles from "$lib/components/Particles.svelte";
+
+  let mouseX = $state(0);
+  let mouseY = $state(0);
+  let hovering = $state(false);
+
+  // Scale factor to account for the perspective skew effect
+  // This is much simpler than trying to compute the exact inverse transformation
+  const SCALE_X = 1.2;
+  const SCALE_Y = 1.1;
+  const BASE_OFFSET_X = 0; // Base horizontal offset
+  const Y_FACTOR = -0.3; // How much to increase offset as Y increases
+
+  // Maximum distance for glow effect
+  const GLOW_RADIUS = 650;
+
+  // Controls the overall intensity of the glow effect (0-1)
+  const GLOW_INTENSITY_SCALE = 0.47;
+
+  // Grid aspect ratio compensation - account for the fact that grid cells are 200x50
+  // This makes the effect appear more circular by scaling the Y component
+  const ASPECT_RATIO_COMPENSATION = 3; // Ratio of cell width to height
+
+  // How fast the effect follows the mouse (1 = instant, closer to 0 = slower)
+  const FOLLOW_SPEED = 1;
+
+  // Target position (for smooth following)
+  let targetX = $state(0);
+  let targetY = $state(0);
+
+  // Actual position used for highlighting (smoothed)
+  let effectX = $state(0);
+  let effectY = $state(0);
+
+  // Animation frame for smooth movement
+  let animationFrame: number;
+
+  // Generate unique base colors for each cell
+  const cellColors = Array(20)
+    .fill(0)
+    .map(() =>
+      Array(10)
+        .fill(0)
+        .map(() => {
+          // Generate a random variation of green
+          const hue = 140 + (Math.random() * 20 - 10); // Green hue with slight variations
+          const saturation = 40 + Math.random() * 20;
+          const lightness = 55 + Math.random() * 30;
+          return `hsl(${hue}deg ${saturation}% ${lightness}%)`;
+        })
+    );
+
+  function updatePosition() {
+    // Smooth movement toward target position
+    effectX = effectX + (targetX - effectX) * FOLLOW_SPEED;
+    effectY = effectY + (targetY - effectY) * FOLLOW_SPEED;
+
+    // Continue animation loop
+    animationFrame = requestAnimationFrame(updatePosition);
+  }
+
+  // Start the animation loop
+  $effect(() => {
+    updatePosition();
+
+    // Cleanup on component unmount
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  });
+
+  function handleMouseMove(event: MouseEvent) {
+    const svg = event.currentTarget as SVGElement;
+    const rect = svg.getBoundingClientRect();
+
+    // Get mouse position in SVG coordinates
+    mouseX = (event.clientX - rect.left) * (1920 / rect.width);
+    mouseY = (event.clientY - rect.top) * (1080 / rect.height);
+
+    // Calculate dynamic offset based on Y position - more offset as Y increases
+    const dynamicOffset = BASE_OFFSET_X + mouseY * Y_FACTOR;
+
+    // Set target position with scaling to account for skew
+    targetX = mouseX * SCALE_X - dynamicOffset;
+    targetY = mouseY * SCALE_Y;
+
+    hovering = true;
+  }
+
+  function handleMouseLeave() {
+    hovering = false;
+  }
+
+  function calculateGlow(col: number, row: number): number {
+    if (!hovering) return 0;
+
+    // Calculate center position of this rectangle in grid space
+    const rectX = col * 200 + 100; // center of rect
+    const rectY = row * 50 + 25; // center of rect
+
+    // Calculate distance from mouse to this rectangle
+    // Scale the Y component to account for the grid's aspect ratio
+    const dx = effectX - rectX;
+    const dy = (effectY - rectY) * ASPECT_RATIO_COMPENSATION;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Calculate glow intensity based on distance (closer = more intense)
+    if (distance > GLOW_RADIUS) return 0;
+
+    // Normalized intensity from 0 to 1, with 1 being closest
+    // Using a smoother easing function to make transitions less abrupt
+    // Scale by the global intensity factor
+    return Math.pow(1 - distance / GLOW_RADIUS, 1.5) * GLOW_INTENSITY_SCALE;
+  }
+
+  function getHighlightColor(baseColor: string, intensity: number): string {
+    if (intensity <= 0.05) return baseColor;
+
+    // Target highlight color - bright green
+    const highlightColor = "hsl(140deg 85% 40%)";
+
+    // Calculate percentage for color-mix
+    const percent = Math.min(100, Math.round(intensity * 100));
+
+    return `color-mix(in srgb, ${baseColor}, ${highlightColor} ${percent}%)`;
+  }
 </script>
 
 <div class="h-full flex flex-col items-center justify-center relative overflow-hidden">
-  <svg class="absolute inset-0 overflow-hidden z-0" width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <svg class="absolute inset-0 overflow-hidden z-0" width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" onmousemove={handleMouseMove} onmouseleave={handleMouseLeave}>
     <defs>
       <!-- Upper left radial gradient -->
       <radialGradient id="gradLeft" cx="15%" cy="-5%" r="30%">
@@ -22,6 +149,12 @@
         <stop offset="0%" style="stop-color:var(--color-green-400); stop-opacity:0.3" />
         <stop offset="100%" style="stop-color:white; stop-opacity:0" />
       </radialGradient>
+
+      <!-- Glow filter for rectangles -->
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="8" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
     </defs>
 
     <!-- Background gradients -->
@@ -33,7 +166,13 @@
       <g id="grid">
         {#each Array(20) as _, row}
           {#each Array(10) as _, col}
-            <rect x={col * 200} y={row * 50} width={200} height={50} class="hover:opacity-70 transition-opacity duration-3000 ease-out" fill="var(--color-green-500)" stroke="var(--color-white)" stroke-width="2" stroke-opacity="0.5" opacity={Math.pow(Math.random(), 1) * 0.08} />
+            {@const glowIntensity = calculateGlow(col, row)}
+            {@const baseOpacity = Math.pow(Math.random(), 1) * 0.08}
+            {@const finalOpacity = baseOpacity + glowIntensity * 0.9}
+            {@const baseColor = cellColors[row][col]}
+            {@const mixedColor = getHighlightColor(baseColor, glowIntensity)}
+
+            <rect x={col * 200} y={row * 50} width={200} height={50} class="transition-all duration-500 ease-out" fill={mixedColor} stroke="var(--color-white)" stroke-width={2 + glowIntensity * 3} stroke-opacity={0.5 + glowIntensity * 0.5} opacity={finalOpacity} filter={glowIntensity > 0.2 ? "url(#glow)" : ""} />
           {/each}
         {/each}
       </g>
