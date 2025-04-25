@@ -42,6 +42,10 @@
 	"dependencies": {
 		"@fontsource-variable/dm-sans": "^5.2.5",
 		"@fontsource-variable/space-grotesk": "^5.2.6",
-		"@fontsource/space-mono": "^5.2.5"
+		"@fontsource/space-mono": "^5.2.5",
+		"@threlte/core": "^8.0.2",
+		"@threlte/extras": "^9.1.4",
+		"@types/three": "^0.176.0",
+		"three": "^0.176.0"
 	}
 }
