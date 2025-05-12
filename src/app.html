@@ -21,17 +21,28 @@
         const shouldSkipSplash = isInIframe || document.body.getAttribute("data-splash-skip") === "true";
 
         const splashEl = document.getElementById("splash-target");
+        const splashReveal = document.getElementById("splash-reveal");
+
+        function removeSplashRevealFixed() {
+          try {
+            if (splashReveal) {
+              splashReveal.classList.remove("fixed", "h-screen", "inset-0");
+            }
+          } catch (err) {
+            console.error("Failed to remove splash-reveal fixed classes", err);
+          }
+        }
 
         if (shouldSkipSplash) {
-        //   stamp();
+          //   stamp();
           console.log("splash skip", isInIframe ? "(iframe)" : "(middleware)");
           splashEl.remove();
 
-          const splashReveal = document.getElementById("splash-reveal");
           if (splashReveal) {
             splashReveal.id = "content";
             splashReveal.style.position = "static";
             splashReveal.style.transform = "none";
+            removeSplashRevealFixed();
           }
         } else {
           if (!splashEl) {
@@ -49,6 +60,7 @@
               if (animationsCompleted === 2) {
                 splashEl.remove();
                 stamp();
+                removeSplashRevealFixed();
               }
             });
           }
