@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from "$app/state";
+  import { dev } from "$app/environment";
   import { ExternalLinkIcon, Grid, List, ChevronRight, Server, ArrowUpRight, Layers, ExternalLink, Image, Command, RefreshCcw, Star, Plus, ArrowUpDown } from "lucide-svelte";
   import { toast } from "svelte-sonner";
   import { Button } from "$lib/components/ui/button/index.js";
@@ -16,6 +17,7 @@
     note?: string;
     tags?: string[];
     featured?: boolean;
+    hidden?: boolean;
   };
 
   let routes = $state<Route[]>([]);
@@ -39,6 +41,46 @@
 
   const currentPath = $derived(page.url.pathname);
 
+  // Calculate preview position to keep within viewport
+  const previewPosition = $derived(() => {
+    if (hoveredRouteIndex === null) return { x: 0, y: 0 };
+
+    const previewWidth = typeof window !== "undefined" && window.innerWidth >= 1024 ? 384 : 288; // w-72 lg:w-96
+    const previewHeight = previewWidth * (9 / 16); // aspect-video
+    const padding = 20; // Safe padding from edges
+
+    // Account for scroll position
+    const scrollX = typeof window !== "undefined" ? window.scrollX || window.pageXOffset : 0;
+    const scrollY = typeof window !== "undefined" ? window.scrollY || window.pageYOffset : 0;
+    const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1024;
+    const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 768;
+
+    let x = mouseX + 10;
+    let y = mouseY - 190;
+
+    // Prevent overflow on right edge
+    if (x + previewWidth > scrollX + viewportWidth - padding) {
+      x = mouseX - previewWidth - 10;
+    }
+
+    // Prevent overflow on left edge
+    if (x < scrollX + padding) {
+      x = scrollX + padding;
+    }
+
+    // Prevent overflow on top edge
+    if (y < scrollY + padding) {
+      y = mouseY + 20;
+    }
+
+    // Prevent overflow on bottom edge
+    if (y + previewHeight > scrollY + viewportHeight - padding) {
+      y = scrollY + viewportHeight - previewHeight - padding;
+    }
+
+    return { x, y };
+  });
+
   function isCurrentRoute(routePath: string): boolean {
     const normalizedCurrentPath = currentPath.endsWith("/") ? currentPath.slice(0, -1) : currentPath;
     const normalizedRoutePath = routePath.endsWith("/") ? routePath.slice(0, -1) : routePath;
@@ -49,6 +91,12 @@
     (() => {
       if (!routes.length) return [];
       let filtered = [...routes];
+
+      // In production, filter out hidden routes
+      if (!dev) {
+        filtered = filtered.filter((route) => !route.hidden);
+      }
+
       if (searchQuery) {
         filtered = filtered.filter((route) => route.name.toLowerCase().includes(searchQuery.toLowerCase()) || route.path.toLowerCase().includes(searchQuery.toLowerCase()));
       }
@@ -61,6 +109,10 @@
       return filtered.sort((a, b) => {
         if (a.path === "/") return -1;
         if (b.path === "/") return 1;
+
+        if (a.featured && !b.featured) return -1;
+        if (!a.featured && b.featured) return 1;
+
         const sortFactor = sortOrder === "asc" ? 1 : -1;
         return sortFactor * a.name.localeCompare(b.name);
       });
@@ -533,20 +585,22 @@
                   </div>
 
                   {#if !hasMetadata(route)}
-                    <button
-                      onclick={(e) => handleMetadataButtonClick(e, route)}
-                      class="px-2 py-1 text-xs border border-zinc-700 rounded bg-zinc-800 text-zinc-300
-                             hover:bg-zinc-700 hover:text-white transition-colors flex items-center relative z-10 group/meta"
-                      disabled={isGeneratingMetadata}
-                    >
-                      {#if isGeneratingMetadata}
-                        <div class="w-3 h-3 rounded-full border border-zinc-500 border-t-zinc-300 animate-spin mr-1"></div>
-                        <span>Adding...</span>
-                      {:else}
-                        <Plus size={10} class="currentColor" />
-                        <span class="w-0 overflow-hidden group-hover/meta:w-auto group-hover/meta:ml-1 transition-all duration-200">Metadata</span>
-                      {/if}
-                    </button>
+                    {#if dev}
+                      <button
+                        onclick={(e) => handleMetadataButtonClick(e, route)}
+                        class="px-2 py-1 text-xs border border-zinc-700 rounded bg-zinc-800 text-zinc-300
+                               hover:bg-zinc-700 hover:text-white transition-colors flex items-center relative z-10 group/meta"
+                        disabled={isGeneratingMetadata}
+                      >
+                        {#if isGeneratingMetadata}
+                          <div class="w-3 h-3 rounded-full border border-zinc-500 border-t-zinc-300 animate-spin mr-1"></div>
+                          <span>Adding...</span>
+                        {:else}
+                          <Plus size={10} class="currentColor" />
+                          <span class="w-0 overflow-hidden group-hover/meta:w-auto group-hover/meta:ml-1 transition-all duration-200">Metadata</span>
+                        {/if}
+                      </button>
+                    {/if}
                   {/if}
                 </div>
               </a>
@@ -562,12 +616,14 @@
         >
           <div class="rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900/40">
             <!-- Table header -->
-            <div class="bg-zinc-900/60 border-b border-zinc-800 py-3 px-4 hidden sm:grid sm:grid-cols-[80px_2fr_1fr_100px_80px] gap-4 sm:gap-6 text-xs text-zinc-500 sticky top-0">
-              <div>ID</div>
-              <div>NAME</div>
-              <div>PATH</div>
-              <div>STATUS</div>
-              <div class="text-center">LINKS</div>
+            <div class="bg-zinc-900/60 border-b border-zinc-800 py-3 px-4 hidden sm:grid {dev ? 'sm:grid-cols-[80px_2fr_1fr_160px_80px]' : 'sm:grid-cols-[80px_2fr_1fr_160px]'} gap-4 sm:gap-6 text-xs text-zinc-500 sticky top-0 uppercase">
+              <div class="text-center">ID</div>
+              <div>Name</div>
+              <div>Path</div>
+              <div class="text-center">Status</div>
+              {#if dev}
+                <div class="text-center">Links</div>
+              {/if}
             </div>
 
             {#each sortedAndFilteredRoutes as route, i}
@@ -579,9 +635,9 @@
                 onmouseenter={() => handleRouteMouseEnter(i)}
                 onmouseleave={handleRouteMouseLeave}
               >
-                <div class="flex sm:grid sm:grid-cols-[80px_2fr_1fr_100px_80px] gap-4 sm:gap-6 items-center p-4">
+                <div class="flex sm:grid {dev ? 'sm:grid-cols-[80px_2fr_1fr_160px_80px]' : 'sm:grid-cols-[80px_2fr_1fr_160px]'} gap-4 sm:gap-6 items-center p-4">
                   <!-- Index/ID column -->
-                  <div class="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded font-mono text-xs text-zinc-400 bg-zinc-900 border border-zinc-800 group-hover:border-zinc-700 transition-colors">{(i + 1).toString().padStart(2, "0")}</div>
+                  <div class="w-7 h-7 flex-shrink-0 flex items-center justify-center justify-self-center rounded font-mono text-xs text-zinc-400 bg-zinc-900 border border-zinc-800 group-hover:border-zinc-700 transition-colors">{(i + 1).toString().padStart(2, "0")}</div>
 
                   <!-- Name column - only shown on mobile -->
                   <div class="flex flex-col sm:hidden flex-1 min-w-0">
@@ -648,27 +704,29 @@
                         <span class="text-xs uppercase text-zinc-300">Active</span>
                       </div>
                     {:else if route.status}
-                      <div class="flex items-center justify-evenly px-2 py-1 rounded {route.status === 'WIP' ? 'bg-amber-500/10 border border-amber-500/20' : route.status === 'Completed' ? 'bg-green-500/10 border border-green-500/20' : 'bg-zinc-500/10 border border-zinc-500/20'}">
+                      <div class="flex items-center justify-evenly px-2 py-1 mx-8 rounded {route.status === 'WIP' ? 'bg-amber-500/10 border border-amber-500/20' : route.status === 'Completed' ? 'bg-green-500/10 border border-green-500/20' : 'bg-zinc-500/10 border border-zinc-500/20'}">
                         <span class="text-xs {route.status === 'WIP' ? 'text-amber-300' : route.status === 'Completed' ? 'text-green-300' : 'text-zinc-400'}">{route.status}</span>
                       </div>
                     {:else if !hasMetadata(route)}
-                      <button
-                        onclick={(e) => handleMetadataButtonClick(e, route)}
-                        class="px-2 py-1 text-xs border border-zinc-700 rounded bg-zinc-800 text-zinc-300
-                              hover:bg-zinc-700 hover:text-white transition-colors flex items-center relative z-10 group/meta"
-                        disabled={isGeneratingMetadata}
-                      >
-                        {#if isGeneratingMetadata}
-                          <div class="w-3 h-3 rounded-full border border-zinc-500 border-t-zinc-300 animate-spin mr-1"></div>
-                          <span>Adding...</span>
-                        {:else}
-                          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                          </svg>
-                          <span class="w-0 overflow-hidden group-hover/meta:w-auto group-hover/meta:ml-0.5 transition-all duration-200">Metadata</span>
-                        {/if}
-                      </button>
+                      {#if dev}
+                        <button
+                          onclick={(e) => handleMetadataButtonClick(e, route)}
+                          class="px-2 py-1 text-xs border border-zinc-700 rounded bg-zinc-800 text-zinc-300
+                                hover:bg-zinc-700 hover:text-white transition-colors flex items-center relative z-10 group/meta"
+                          disabled={isGeneratingMetadata}
+                        >
+                          {#if isGeneratingMetadata}
+                            <div class="w-3 h-3 rounded-full border border-zinc-500 border-t-zinc-300 animate-spin mr-1"></div>
+                            <span>Adding...</span>
+                          {:else}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <line x1="12" y1="5" x2="12" y2="19"></line>
+                              <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            <span class="w-0 overflow-hidden group-hover/meta:w-auto group-hover/meta:ml-0.5 transition-all duration-200">Metadata</span>
+                          {/if}
+                        </button>
+                      {/if}
                     {:else}
                       <div class="w-6 h-6 rounded opacity-60 flex items-center justify-center group-hover:opacity-100 transition-opacity">
                         <ArrowUpRight size={14} class="text-zinc-500 group-hover:text-white transition-colors duration-200" />
@@ -677,9 +735,11 @@
                   </div>
 
                   <!-- Links column -->
-                  <div class="hidden sm:flex items-center justify-center">
-                    <ArrowUpRight size={16} class="text-muted-foreground group-hover:text-primary transition-colors duration-200" />
-                  </div>
+                  {#if dev}
+                    <div class="hidden sm:flex items-center justify-center">
+                      <ArrowUpRight size={16} class="text-muted-foreground group-hover:text-primary transition-colors duration-200" />
+                    </div>
+                  {/if}
                 </div>
               </a>
             {/each}
@@ -693,7 +753,7 @@
               style="
                   opacity: {hoveredRouteIndex === i ? 1 : 0}; 
                   visibility: {hoveredRouteIndex === i ? 'visible' : 'hidden'};
-                  transform: translate({mouseX + 10}px, {mouseY - 190}px);
+                  transform: translate({previewPosition().x}px, {previewPosition().y}px);
                   transition: opacity 150ms ease-out, visibility 150ms ease-out;
                   will-change: transform;
                 "

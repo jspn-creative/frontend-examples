@@ -145,7 +145,7 @@
   </div>
 </main> -->
 
-<main class="flex min-h-dvh flex-col pt-14 text-gray-900 bg-neutral-200">
+<main class="flex min-h-dvh flex-col pt-14 text-gray-900 bg-neutral-500">
   <div class="grid flex-1 grid-cols-[1fr_var(--gutter-width)_minmax(0,var(--breakpoint-2xl))_var(--gutter-width)_1fr] grid-rows-[1fr_auto] overflow-clip [--gutter-width:--spacing(6)] lg:[--gutter-width:--spacing(10)]">
     <div class="col-start-2 row-span-full row-start-1 border-x border-x-current bg-[image:repeating-linear-gradient(315deg,currentColor_0,currentColor_1px,_transparent_0,_transparent_50%)] bg-[size:10px_10px] bg-fixed text-gray-950/5 max-sm:hidden"></div>
     <div class="col-start-4 row-span-full row-start-1 border-x border-x-current bg-[image:repeating-linear-gradient(315deg,currentColor_0,currentColor_1px,_transparent_0,_transparent_50%)] bg-[size:10px_10px] bg-fixed text-gray-950/5 max-sm:hidden"></div>
@@ -153,13 +153,13 @@
       <!-- Content -->
       <div class="line-y mt-12 grid gap-x-10 sm:mt-14 lg:grid-cols-[3fr_2fr]">
         <div class="max-lg:line-b px-4 py-2 sm:px-2 lg:border-r lg:border-gray-950/5">
-          <p class="font-mono text-[0.8125rem]/6 font-medium tracking-widest text-pretty text-gray-600 uppercase">By the makers of Tailwind CSS</p>
-          <h1 class="mt-2 text-6xl tracking-tighter text-pretty">Build your next idea even faster.</h1>
+          <p class="font-mono text-[0.8125rem]/6 font-medium tracking-widest text-pretty text-gray-600 uppercase">// App Development and Web Design</p>
+          <h1 class="mt-2 text-6xl tracking-tighter text-pretty">Websites that perform as beautifully as they look.</h1>
         </div>
         <div class="grid grid-cols-1 grid-rows-[1fr_auto] lg:border-l lg:border-gray-950/5">
-          <div class="max-lg:line-y flex items-center px-4 py-2 max-lg:mt-6 sm:px-2"><p class="max-w-2xl text-lg/7 font-medium text-pretty text-gray-600">Beautifully designed, expertly crafted components and templates, built by the makers of Tailwind CSS. The perfect starting point for your next project.</p></div>
+          <div class="max-lg:line-y flex items-center px-4 py-2 max-lg:mt-6 sm:px-2"><p class="max-w-2xl text-lg/7 font-medium text-pretty text-gray-600">Specializing in custom web development where pixel-perfect design meets blazing-fast performance. Go beyond templates. Invest in quality.</p></div>
           <div class="max-lg:line-t flex gap-4 px-4 py-2 whitespace-nowrap max-lg:mt-6 sm:px-2 lg:border-t lg:border-gray-950/5">
-            <a class="inline-flex justify-center gap-2 rounded-full bg-gray-950 px-4 py-2 text-sm/6 font-semibold text-white hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-950" href="/plus/templates">Explore templates<svg fill="currentColor" aria-hidden="true" viewBox="0 0 10 10" class="-mr-0.5 w-2.5"><path d="M4.85355 0.146423L9.70711 4.99998L4.85355 9.85353L4.14645 9.14642L7.79289 5.49998H0V4.49998H7.79289L4.14645 0.85353L4.85355 0.146423Z"></path></svg></a><a class="inline-flex justify-center gap-2 rounded-full px-4 py-2 text-sm/6 font-semibold text-gray-950 ring-1 ring-gray-950/10 hover:ring-gray-950/20" href="/plus/ui-blocks">Browse UI blocks<svg fill="currentColor" aria-hidden="true" viewBox="0 0 10 10" class="-mr-0.5 w-2.5 fill-gray-600"><path d="M4.85355 0.146423L9.70711 4.99998L4.85355 9.85353L4.14645 9.14642L7.79289 5.49998H0V4.49998H7.79289L4.14645 0.85353L4.85355 0.146423Z"></path></svg></a>
+            <a class="inline-flex justify-center gap-2 rounded-full bg-gray-950 px-4 py-2 text-sm/6 font-semibold text-white hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-950" href="/plus/templates">Schedule a call<svg fill="currentColor" aria-hidden="true" viewBox="0 0 10 10" class="-mr-0.5 w-2.5"><path d="M4.85355 0.146423L9.70711 4.99998L4.85355 9.85353L4.14645 9.14642L7.79289 5.49998H0V4.49998H7.79289L4.14645 0.85353L4.85355 0.146423Z"></path></svg></a><a class="inline-flex justify-center gap-2 rounded-full px-4 py-2 text-sm/6 font-semibold text-gray-950 ring-1 ring-gray-950/10 hover:ring-gray-950/20" href="/plus/ui-blocks">Reach out now<svg fill="currentColor" aria-hidden="true" viewBox="0 0 10 10" class="-mr-0.5 w-2.5 fill-gray-600"><path d="M4.85355 0.146423L9.70711 4.99998L4.85355 9.85353L4.14645 9.14642L7.79289 5.49998H0V4.49998H7.79289L4.14645 0.85353L4.85355 0.146423Z"></path></svg></a>
           </div>
         </div>
       </div>
@@ -188,8 +188,8 @@
               </g>
             </svg>
             <div class="text-left text-xs/5 sm:text-sm/7 xl:flex-1">
-              <p class="font-mono font-semibold tracking-widest uppercase">UI Blocks</p>
-              <p class="mt-2 text-gray-600 max-xl:hidden">Over 500+ professionally designed, fully responsive, expertly crafted components.</p>
+              <p class="font-mono font-semibold tracking-widest uppercase">Pain point one</p>
+              <p class="mt-2 text-gray-600 max-xl:hidden">Custom functionality to solve your numerous problems.</p>
             </div>
           </button>
           <div class="w-px bg-gray-950/5"></div>
@@ -212,8 +212,8 @@
               </g>
             </svg>
             <div class="text-left text-xs/5 sm:text-sm/7 xl:flex-1">
-              <p class="font-mono font-semibold tracking-widest uppercase">Templates</p>
-              <p class="mt-2 text-gray-600 max-xl:hidden">Visually-stunning, easy to customize site templates built with React and Next.js.</p>
+              <p class="font-mono font-semibold tracking-widest uppercase">Pain point two</p>
+              <p class="mt-2 text-gray-600 max-xl:hidden">Visually-stunning, like a futuristic fire extinguisher custom built for your dumpster.</p>
             </div>
           </button>
           <div class="w-px bg-gray-950/5"></div>
@@ -244,8 +244,8 @@
               </g>
             </svg>
             <div class="text-left text-xs/5 sm:text-sm/7 xl:flex-1">
-              <p class="font-mono font-semibold tracking-widest uppercase">UI Kit</p>
-              <p class="mt-2 text-gray-600 max-xl:hidden">A starter kit for building your own component systems with React and Tailwind CSS.</p>
+              <p class="font-mono font-semibold tracking-widest uppercase">Pain point three</p>
+              <p class="mt-2 text-gray-600 max-xl:hidden">Integrates with stuff. Sometimes also things.</p>
             </div>
           </button>
         </div>

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Toaster } from "$lib/components/ui/sonner/index.js";
   import { dev } from "$app/environment";
-  import { RenderScan } from "svelte-render-scan";
   import Inspect from "svelte-inspect-value";
   import { setGlobalInspectOptions } from "svelte-inspect-value";
 
@@ -23,7 +22,9 @@
 <Toaster richColors />
 {@render children()}
 {#if dev}
-  <RenderScan initialEnabled={false} offsetLeft={30} duration={2000} />
+  {#await import("svelte-render-scan") then { RenderScan }}
+    <RenderScan initialEnabled={false} offsetLeft={30} duration={2000} />
+  {/await}
 {/if}
 
 <style>

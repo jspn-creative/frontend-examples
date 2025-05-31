@@ -1,12 +1,37 @@
 import { json, error } from '@sveltejs/kit';
-import { writeFile, access, mkdir } from 'fs/promises';
-import { constants } from 'fs';
-import { join, dirname } from 'path';
+
+// Conditionally import Node.js modules only if available
+let writeFile: any, access: any, mkdir: any, constants: any, join: any, dirname: any;
+let isNodeEnvironment = false;
+
+try {
+  // Check if we're in a Node.js environment
+  if (typeof process !== 'undefined' && process.versions?.node) {
+    const fs = await import('fs');
+    const fsPromises = await import('fs/promises');
+    const path = await import('path');
+    
+    writeFile = fsPromises.writeFile;
+    access = fsPromises.access;
+    mkdir = fsPromises.mkdir;
+    constants = fs.constants;
+    join = path.join;
+    dirname = path.dirname;
+    isNodeEnvironment = true;
+  }
+} catch (err) {
+  // Not in Node.js environment, filesystem operations will be unavailable
+  isNodeEnvironment = false;
+}
 
 // Use import.meta.glob to discover all page files at build time
 const pageModules = import.meta.glob('/src/routes/**/+page.svelte');
 
 export async function GET({ url }) {
+  if (!isNodeEnvironment) {
+    throw error(501, 'Metadata generation is only available in Node.js environments. This feature requires filesystem access which is not available in edge runtimes.');
+  }
+
   // Get the route path from the query parameter
   const routePath = url.searchParams.get('routePath');
   

@@ -1,15 +1,14 @@
 import { json } from '@sveltejs/kit';
 
-// Define metadata type
 export type RouteMeta = {
   name?: string;
   status?: "WIP" | "Completed" | "Inactive";
   note?: string;
   tags?: string[];
   featured?: boolean;
+  hidden?: boolean;
 };
 
-// Use import.meta.glob to discover all page files and route metadata at build time
 const pageModules = import.meta.glob('/src/routes/**/+page.svelte');
 const metaModules = import.meta.glob<{ meta: RouteMeta }>('/src/routes/**/route-meta.ts', { eager: true });
 
@@ -23,7 +22,6 @@ export async function GET({ url }) {
     featured?: boolean;
   }> = [];
   
-  // Get the directory parameter
   const targetDirectory = url.searchParams.get('directory');
   
   // Add the root route
@@ -33,9 +31,8 @@ export async function GET({ url }) {
   //   status: 'Completed'
   // });
   
-  // Process all paths from the glob result
+
   for (const path in pageModules) {
-    // Extract route path from the file path
     // Convert from "/src/routes/my-page/+page.svelte" to "/my-page"
     const routePath = path
       .replace('/src/routes', '')
@@ -58,18 +55,14 @@ export async function GET({ url }) {
       .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
     
-    // Create the base route object with cleaned path (remove SvelteKit group directories)
-    // SvelteKit groups (like (examples)) should be removed from the public URL
     const cleanedPath = routePath.replace(/\/\([^)]+\)/g, '');
     
     const routeObject = {
       path: cleanedPath,
       name: routeName,
-      // Store the internal path for metadata references
       internalPath: routePath
     };
     
-    // Check if there's metadata for this route
     const metaPath = `/src/routes${routePath}/route-meta.ts`;
     if (metaPath in metaModules && metaModules[metaPath].meta) {
       // Merge the metadata with the route object

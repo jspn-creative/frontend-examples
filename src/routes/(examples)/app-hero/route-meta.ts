@@ -1,9 +1,10 @@
 import type { RouteMeta } from '../../api/routes/+server.ts';
 
 export const meta: RouteMeta = {
-  name: "Butt Panel",
+  name: "App Hero",
   status: "WIP",
-  note: "Just a panel of butts.",
+  note: "",
   tags: [],
-  featured: false
+  featured: false,
+  hidden: true
 };

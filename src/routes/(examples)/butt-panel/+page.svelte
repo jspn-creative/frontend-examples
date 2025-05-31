@@ -4,8 +4,6 @@
   import Scene from "./DreamyParticleScene.svelte";
   // import Scene from "./MotionBloomScene.svelte";
   // import Scene from "./GlowScene.svelte";
-  import { fade } from "svelte/transition";
-  import { dev } from "$app/environment";
   import { onMount } from "svelte";
   import { innerWidth, innerHeight } from "svelte/reactivity/window";
 
@@ -16,7 +14,7 @@
   let pane: any = null;
 
   // Post processing settings
-  let bloomIntensity = $state(1.5);
+  let bloomIntensity = $state(1.3);
   let bloomThreshold = $state(0.15);
   let bloomRadius = $state(0.4);
   let exposure = $state(1);
@@ -25,7 +23,7 @@
   let particleSize = $state(0.05);
   let maxParticleSize = $state(0.25);
   let particleSpread = $state(10);
-  let particleCount = $state(100);
+  let particleCount = $state(14500);
 
   let tubeRadius = $state(3);
 
@@ -34,8 +32,6 @@
   }
 
   function setupTweakPane() {
-    if (!dev) return;
-
     import("tweakpane")
       .then(({ Pane }) => {
         const config = {
@@ -301,7 +297,7 @@
   <h2 class="text-[#6A6B66] font-bold">Click the SEAS logo:</h2>
   <div class="relative max-w-full h-[80vh] aspect-[9/16]]">
     <SVGPanel {toggleGlow} isGlowing={isActive} {isTextured} {texture} />
-    <div bind:this={borderElement} class="absolute inset-0">
+    <div bind:this={borderElement} class="absolute inset-0 pointer-events-none">
       {#if showTest}
         <div class="absolute top-0 left-0 border border-red-500" style="width: {borderRect.width}px; height: {borderRect.height}px; ">
           <div class="p-4">
@@ -317,7 +313,7 @@
         </div>
       {/if}
     </div>
-    <div class="absolute -inset-10">
+    <div class="absolute -inset-10 pointer-events-none">
       <Canvas>
         {#if import.meta.env.MODE === "development"}
           {#await import("@threlte/studio") then { Studio }}
