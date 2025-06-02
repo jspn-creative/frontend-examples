@@ -8,7 +8,7 @@
   import { innerWidth, innerHeight } from "svelte/reactivity/window";
 
   let isActive = $state(false);
-  let isTextured = $state(false);
+  let isTextured = $state(true);
   let showTest = $state(false);
   let texture = $state(1);
   let pane: any = null;
@@ -28,7 +28,8 @@
   let tubeRadius = $state(3);
 
   function toggleGlow() {
-    isActive = !isActive;
+    // isActive = !isActive;
+    isActive = false;
   }
 
   function setupTweakPane() {
@@ -52,68 +53,16 @@
         // Create a container div positioned lower on the screen
         const container = document.createElement("div");
         container.style.position = "fixed";
-        container.style.top = "60%";
+        container.style.top = "10%";
         container.style.right = "20px";
         container.style.zIndex = "1000";
-        container.style.cursor = "move";
         document.body.appendChild(container);
 
-        // Make container draggable
-        let isDragging = false;
-        let dragOffset = { x: 0, y: 0 };
-
-        container.addEventListener("mousedown", (e) => {
-          isDragging = true;
-          const rect = container.getBoundingClientRect();
-          dragOffset.x = e.clientX - rect.left;
-          dragOffset.y = e.clientY - rect.top;
-          container.style.cursor = "grabbing";
-          e.preventDefault();
-        });
-
-        document.addEventListener("mousemove", (e) => {
-          if (!isDragging) return;
-
-          const x = e.clientX - dragOffset.x;
-          const y = e.clientY - dragOffset.y;
-
-          // Keep container within viewport bounds
-          const maxX = window.innerWidth - container.offsetWidth;
-          const maxY = window.innerHeight - container.offsetHeight;
-
-          container.style.left = Math.max(0, Math.min(x, maxX)) + "px";
-          container.style.top = Math.max(0, Math.min(y, maxY)) + "px";
-          container.style.right = "auto";
-        });
-
-        document.addEventListener("mouseup", () => {
-          if (isDragging) {
-            isDragging = false;
-            container.style.cursor = "move";
-          }
-        });
-
         pane = new Pane({
-          title: "Button Effects Config",
+          title: "Effect Config",
           expanded: true,
           container: container,
         });
-
-        pane
-          .addBinding(config, "isActive", {
-            label: "Glow Effect",
-          })
-          .on("change", (event: any) => {
-            isActive = event.value;
-          });
-
-        pane
-          .addBinding(config, "showTest", {
-            label: "Show Test Geometry",
-          })
-          .on("change", (event: any) => {
-            showTest = event.value;
-          });
 
         pane
           .addBinding(config, "isTextured", {
@@ -140,8 +89,30 @@
             texture = event.value;
           });
 
-        // Post processing folder
-        const postProcessingFolder = pane.addFolder({
+        // Create tab for 3D settings
+        const threeDTab = pane.addTab({
+          pages: [{ title: "3D Settings" }],
+        });
+
+        // General 3D controls
+        threeDTab.pages[0]
+          .addBinding(config, "isActive", {
+            label: "Glow Effect",
+          })
+          .on("change", (event: any) => {
+            toggleGlow();
+          });
+
+        threeDTab.pages[0]
+          .addBinding(config, "showTest", {
+            label: "Show Test Geometry",
+          })
+          .on("change", (event: any) => {
+            showTest = event.value;
+          });
+
+        // Post processing folder in the 3D tab
+        const postProcessingFolder = threeDTab.pages[0].addFolder({
           title: "Post Processing",
           expanded: false,
         });
@@ -190,10 +161,27 @@
             exposure = event.value;
           });
 
-        // Particle controls folder
-        const particleFolder = pane.addFolder({
+        // 3D Controls folder in the 3D tab
+        const threeDFolder = threeDTab.pages[0].addFolder({
+          title: "3D Controls",
+          expanded: false,
+        });
+
+        threeDFolder
+          .addBinding({ tubeRadius }, "tubeRadius", {
+            label: "Tube Radius",
+            min: 1,
+            max: 10,
+            step: 0.1,
+          })
+          .on("change", (event: any) => {
+            tubeRadius = event.value;
+          });
+
+        // Particle controls folder in the 3D tab
+        const particleFolder = threeDTab.pages[0].addFolder({
           title: "Particle Controls",
-          expanded: true,
+          expanded: false,
         });
 
         particleFolder
