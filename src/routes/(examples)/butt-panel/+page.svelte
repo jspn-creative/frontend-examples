@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Canvas } from "@threlte/core";
-  import SVGPanel from "./svgbtn.svelte";
+  // import SVGPanel from "./svgbtn.svelte";
+  import SVGPanel from "./butt-panel.svelte";
   import Scene from "./DreamyParticleScene.svelte";
   // import Scene from "./MotionBloomScene.svelte";
   // import Scene from "./GlowScene.svelte";
