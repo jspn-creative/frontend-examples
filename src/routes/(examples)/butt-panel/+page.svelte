@@ -283,9 +283,32 @@
 </script>
 
 <div class="bg-[#0E0F0D] min-h-screen flex flex-col gap-6 items-center justify-center">
-  <h2 class="text-[#6A6B66] font-bold">Click the SEAS logo:</h2>
+  <!-- <h2 class="text-[#6A6B66] font-bold">Click the SEAS logo:</h2> -->
   <div class="relative max-w-full h-[80vh] aspect-[9/16]]">
     <SVGPanel {toggleGlow} isGlowing={isActive} {isTextured} {texture} />
+    <div class="@container bg-[#000] border-4 border-[#090B09] absolute top-[3%] inset-x-[15%] h-6 pointer-events-none">
+      <div class="relative">
+        <!-- User Avatar: -->
+        <div class="@max-[250px]:scale-80 @max-[180px]:scale-50 @max-[180px]:-left-6 absolute -top-3.5 -left-3 w-10 h-11 bg-[conic-gradient(from_45deg_at_50%_50%,_#ffffff39_0%_10%,_#838483_10%_30%,_#ffffff39_30%_60%,_#838483_60%_80%,_#ffffff39_80%_100%)] [clip-path:shape(from_50%_0%,_line_to_100%_30%,_line_to_100%_70%,_line_to_50%_100%,_line_to_0%_70%,_line_to_0%_30%,_close)] flex items-center justify-center">
+          <div class="bg-gradient-to-br w-[2.35rem] h-[2.6rem] from-[#121412] to-[#191D1A] [clip-path:shape(from_50%_0%,_line_to_100%_30%,_line_to_100%_70%,_line_to_50%_100%,_line_to_0%_70%,_line_to_0%_30%,_close)] flex items-center justify-center">
+            <span class="text-[#838483] text-xs font-bold">JS</span>
+          </div>
+        </div>
+
+        <!-- Alert Button: -->
+        <div class="@max-[250px]:scale-80 @max-[180px]:scale-50 @max-[180px]:-right-6 absolute -top-3.5 -right-3 w-10 h-11 bg-[conic-gradient(#ffffff39_0%_10%,_#838483_10%_30%,_#ffffff39_30%_60%,_#838483_60%_80%,_#ffffff39_80%_100%)] [clip-path:shape(from_50%_0%,_line_to_100%_30%,_line_to_100%_70%,_line_to_50%_100%,_line_to_0%_70%,_line_to_0%_30%,_close)] flex items-center justify-center">
+          <div class="bg-gradient-to-br w-[2.35rem] h-[2.6rem] from-[#121412] to-[#191D1A] [clip-path:shape(from_50%_0%,_line_to_100%_30%,_line_to_100%_70%,_line_to_50%_100%,_line_to_0%_70%,_line_to_0%_30%,_close)] flex items-center justify-center">
+            <svg class="w-4 h-4 text-[#838483]" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+          <!-- Notification badge -->
+          <div class="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center">
+            <span class="text-[8px] text-red-500 font-bold">3</span>
+          </div>
+        </div>
+      </div>
+    </div>
     <div bind:this={borderElement} class="absolute inset-0 pointer-events-none">
       {#if showTest}
         <div class="absolute top-0 left-0 border border-red-500" style="width: {borderRect.width}px; height: {borderRect.height}px; ">
