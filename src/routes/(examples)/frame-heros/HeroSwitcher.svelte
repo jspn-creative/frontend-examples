@@ -9,7 +9,7 @@
   import Button from "$lib/components/ui/button/button.svelte";
   import * as Select from "$lib/components/ui/select/index";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
-  import { SwatchBook, Crop } from "lucide-svelte";
+  import { SwatchBook, Crop } from "@lucide/svelte";
 
   let isOpen = $state(false);
 
