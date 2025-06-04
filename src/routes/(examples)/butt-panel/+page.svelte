@@ -5,14 +5,14 @@
   import Scene from "./DreamyParticleScene.svelte";
   // import Scene from "./MotionBloomScene.svelte";
   // import Scene from "./GlowScene.svelte";
-  import { onMount } from "svelte";
   import { innerWidth, innerHeight } from "svelte/reactivity/window";
+  import { ThemeUtils, Pane, Checkbox, List, TabGroup, TabPage, Folder, Slider, type ListOptions } from "svelte-tweakpane-ui";
+  // ThemeUtils.setGlobalDefaultTheme(ThemeUtils.presets.translucent);
 
   let isActive = $state(false);
   let isTextured = $state(true);
   let showTest = $state(false);
   let texture = $state(1);
-  let pane: any = null;
 
   // Post processing settings
   let bloomIntensity = $state(1.3);
@@ -29,230 +29,24 @@
   let tubeRadius = $state(3);
 
   function toggleGlow() {
-    // isActive = !isActive;
-    isActive = false;
+    isActive = !isActive;
   }
 
-  function setupTweakPane() {
-    import("tweakpane")
-      .then(({ Pane }) => {
-        const config = {
-          isActive: isActive,
-          isTextured: isTextured,
-          showTest: showTest,
-          texture: texture,
-          bloomIntensity: bloomIntensity,
-          bloomThreshold: bloomThreshold,
-          bloomRadius: bloomRadius,
-          exposure: exposure,
-          particleSize: particleSize,
-          particleSpread: particleSpread,
-          particleCount: particleCount,
-          maxParticleSize: maxParticleSize,
-        };
-
-        // Create a container div positioned lower on the screen
-        const container = document.createElement("div");
-        container.style.position = "fixed";
-        container.style.top = "10%";
-        container.style.right = "20px";
-        container.style.zIndex = "1000";
-        document.body.appendChild(container);
-
-        pane = new Pane({
-          title: "Effect Config",
-          expanded: true,
-          container: container,
-        });
-
-        pane
-          .addBinding(config, "isTextured", {
-            label: "Textured",
-          })
-          .on("change", (event: any) => {
-            isTextured = event.value;
-          });
-
-        pane
-          .addBinding(config, "texture", {
-            label: "Texture",
-            options: {
-              "Distressed Metal": 1,
-              "Corroded Metal": 2,
-              "Leathery Metal": 3,
-              "Streaked Metal": 4,
-              "Scuffed Metal": 5,
-              "Grainy Metal": 6,
-              "Scratched Metal": 7,
-            },
-          })
-          .on("change", (event: any) => {
-            texture = event.value;
-          });
-
-        // Create tab for 3D settings
-        const threeDTab = pane.addTab({
-          pages: [{ title: "3D Settings" }],
-        });
-
-        // General 3D controls
-        threeDTab.pages[0]
-          .addBinding(config, "isActive", {
-            label: "Glow Effect",
-          })
-          .on("change", (event: any) => {
-            toggleGlow();
-          });
-
-        threeDTab.pages[0]
-          .addBinding(config, "showTest", {
-            label: "Show Test Geometry",
-          })
-          .on("change", (event: any) => {
-            showTest = event.value;
-          });
-
-        // Post processing folder in the 3D tab
-        const postProcessingFolder = threeDTab.pages[0].addFolder({
-          title: "Post Processing",
-          expanded: false,
-        });
-
-        postProcessingFolder
-          .addBinding({ bloomIntensity }, "bloomIntensity", {
-            label: "Bloom Intensity",
-            min: 0,
-            max: 3,
-            step: 0.1,
-          })
-          .on("change", (event: any) => {
-            bloomIntensity = event.value;
-          });
-
-        postProcessingFolder
-          .addBinding({ bloomThreshold }, "bloomThreshold", {
-            label: "Bloom Threshold",
-            min: 0,
-            max: 1,
-            step: 0.01,
-          })
-          .on("change", (event: any) => {
-            bloomThreshold = event.value;
-          });
-
-        postProcessingFolder
-          .addBinding({ bloomRadius }, "bloomRadius", {
-            label: "Bloom Radius",
-            min: 0,
-            max: 1,
-            step: 0.01,
-          })
-          .on("change", (event: any) => {
-            bloomRadius = event.value;
-          });
-
-        postProcessingFolder
-          .addBinding({ exposure }, "exposure", {
-            label: "Exposure",
-            min: 0.1,
-            max: 2,
-            step: 0.1,
-          })
-          .on("change", (event: any) => {
-            exposure = event.value;
-          });
-
-        // 3D Controls folder in the 3D tab
-        const threeDFolder = threeDTab.pages[0].addFolder({
-          title: "3D Controls",
-          expanded: false,
-        });
-
-        threeDFolder
-          .addBinding({ tubeRadius }, "tubeRadius", {
-            label: "Tube Radius",
-            min: 1,
-            max: 10,
-            step: 0.1,
-          })
-          .on("change", (event: any) => {
-            tubeRadius = event.value;
-          });
-
-        // Particle controls folder in the 3D tab
-        const particleFolder = threeDTab.pages[0].addFolder({
-          title: "Particle Controls",
-          expanded: false,
-        });
-
-        particleFolder
-          .addBinding({ particleSize }, "particleSize", {
-            label: "Particle Size",
-            min: 0.05,
-            max: 2,
-            step: 0.05,
-          })
-          .on("change", (event: any) => {
-            particleSize = event.value;
-          });
-
-        particleFolder
-          .addBinding({ maxParticleSize }, "maxParticleSize", {
-            label: "Max Particle Size",
-            min: 0.25,
-            max: 3,
-            step: 0.25,
-          })
-          .on("change", (event: any) => {
-            maxParticleSize = event.value;
-          });
-
-        particleFolder
-          .addBinding({ particleSpread }, "particleSpread", {
-            label: "Particle Spread",
-            min: 5,
-            max: 50,
-            step: 1,
-          })
-          .on("change", (event: any) => {
-            particleSpread = event.value;
-          });
-
-        particleFolder
-          .addBinding({ particleCount }, "particleCount", {
-            label: "Particle Count",
-            min: 1000,
-            max: 15000,
-            step: 500,
-          })
-          .on("change", (event: any) => {
-            particleCount = event.value;
-          });
-      })
-      .catch((err) => {
-        console.error("Failed to load tweakpane:", err);
-      });
-  }
-
-  onMount(() => {
-    setupTweakPane();
-
-    return () => {
-      if (pane) {
-        pane.dispose();
-        // Clean up the container element
-        const containers = document.querySelectorAll('div[style*="position: fixed"][style*="top: 60%"]');
-        containers.forEach((container) => container.remove());
-      }
-    };
-  });
+  const textureOptions: ListOptions<number> = {
+    "Distressed Metal": 1,
+    "Corroded Metal": 2,
+    "Leathery Metal": 3,
+    "Streaked Metal": 4,
+    "Scuffed Metal": 5,
+    "Grainy Metal": 6,
+    "Scratched Metal": 7,
+  };
 
   const glowColor = "#ff0000";
 
   let borderElement: HTMLDivElement;
   let borderRect = $state({ x: 0, y: 0, width: 0, height: 0 });
 
-  // Update border position when window size or border element changes
   $effect(() => {
     const updateBorderRect = () => {
       if (borderElement && innerWidth.current && innerHeight.current) {
@@ -281,6 +75,37 @@
   // $inspect(borderRect);
   $inspect(innerWidth.current);
 </script>
+
+<!-- Tweakpane UI -->
+<Pane position="draggable" title="Effect Config" expanded x={innerWidth.current - 350} padding="75px 7px">
+  <Checkbox bind:value={isTextured} label="Textured" />
+  <List bind:value={texture} label="Texture" options={textureOptions} />
+
+  <TabGroup>
+    <TabPage title="3D Settings">
+      <Checkbox bind:value={isActive} label="Glow Effect" />
+      <Checkbox bind:value={showTest} label="Show Test Geometry" />
+
+      <Folder title="Post Processing" expanded={false}>
+        <Slider bind:value={bloomIntensity} label="Bloom Intensity" min={0} max={3} step={0.1} />
+        <Slider bind:value={bloomThreshold} label="Bloom Threshold" min={0} max={1} step={0.01} />
+        <Slider bind:value={bloomRadius} label="Bloom Radius" min={0} max={1} step={0.01} />
+        <Slider bind:value={exposure} label="Exposure" min={0.1} max={2} step={0.1} />
+      </Folder>
+
+      <Folder title="3D Controls" expanded={false}>
+        <Slider bind:value={tubeRadius} label="Tube Radius" min={1} max={10} step={0.1} />
+      </Folder>
+
+      <Folder title="Particle Controls" expanded={false}>
+        <Slider bind:value={particleSize} label="Particle Size" min={0.05} max={2} step={0.05} />
+        <Slider bind:value={maxParticleSize} label="Max Particle Size" min={0.25} max={3} step={0.25} />
+        <Slider bind:value={particleSpread} label="Particle Spread" min={5} max={50} step={1} />
+        <Slider bind:value={particleCount} label="Particle Count" min={1000} max={15000} step={500} />
+      </Folder>
+    </TabPage>
+  </TabGroup>
+</Pane>
 
 <div class="bg-[#0E0F0D] min-h-screen flex flex-col gap-6 items-center justify-center">
   <!-- <h2 class="text-[#6A6B66] font-bold">Click the SEAS logo:</h2> -->
