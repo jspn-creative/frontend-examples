@@ -614,61 +614,42 @@
           class="col-start-1 row-start-1 w-full transition-all duration-300 ease-in-out
                 {!isGridView ? 'opacity-100 blur-0 translate-y-0 z-10' : 'opacity-0 blur-sm translate-y-1 -z-10 pointer-events-none'}"
         >
-          <div class="rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900/40">
+          <div
+            class="rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900/40 grid
+                     grid-cols-[auto_1fr] xs:grid-cols-[60px_1fr_120px] gap-3
+                     {dev ? 'sm:grid-cols-[80px_2fr_1fr_160px_80px] sm:gap-6' : 'sm:grid-cols-[80px_2fr_1fr_160px] sm:gap-6'}"
+          >
             <!-- Table header -->
-            <div class="bg-zinc-900/60 border-b border-zinc-800 py-3 px-4 hidden sm:grid {dev ? 'sm:grid-cols-[80px_2fr_1fr_160px_80px]' : 'sm:grid-cols-[80px_2fr_1fr_160px]'} gap-4 sm:gap-6 text-xs text-zinc-500 sticky top-0 uppercase">
-              <div class="text-center">ID</div>
-              <div>Name</div>
-              <div>Path</div>
-              <div class="text-center">Status</div>
+            <!-- BG -->
+
+            <div class="grid grid-cols-subgrid col-span-full sticky top-0 bg-zinc-900/60 border-b border-zinc-800 uppercase text-xs text-zinc-500">
+              <div class="hidden xs:flex text-center items-center justify-center py-3 px-4">ID</div>
+              <div class="flex items-center py-3 px-4">Name</div>
+              <div class="hidden sm:flex items-center py-3 px-4">Path</div>
+              <div class="text-center flex items-center justify-center py-3 px-4">Status</div>
               {#if dev}
-                <div class="text-center">Links</div>
+                <div class="hidden sm:flex text-center items-center justify-center py-3 px-4">Links</div>
               {/if}
             </div>
 
             {#each sortedAndFilteredRoutes as route, i}
               <a
                 href={route.path}
-                class="group relative block transition-all duration-200 border-b border-zinc-800/50 last:border-0
-                      {isCurrentRoute(route.path) ? 'bg-zinc-800/50' : 'hover:bg-zinc-800/30'}"
+                class="group relative border-b border-zinc-800/50 last:border-0 transition-all duration-200
+                      {isCurrentRoute(route.path) ? 'bg-zinc-800/50' : 'hover:bg-zinc-800/30'}
+                      contents"
                 onmousemove={handleMouseMove}
                 onmouseenter={() => handleRouteMouseEnter(i)}
                 onmouseleave={handleRouteMouseLeave}
               >
-                <div class="flex sm:grid {dev ? 'sm:grid-cols-[80px_2fr_1fr_160px_80px]' : 'sm:grid-cols-[80px_2fr_1fr_160px]'} gap-4 sm:gap-6 items-center p-4">
-                  <!-- Index/ID column -->
-                  <div class="w-7 h-7 flex-shrink-0 flex items-center justify-center justify-self-center rounded font-mono text-xs text-zinc-400 bg-zinc-900 border border-zinc-800 group-hover:border-zinc-700 transition-colors">{(i + 1).toString().padStart(2, "0")}</div>
+                <!-- Index/ID column -->
+                <div class="hidden xs:flex p-3 sm:p-4 items-center justify-center">
+                  <div class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded font-mono text-xs text-zinc-400 bg-zinc-900 border border-zinc-800 group-hover:border-zinc-700 transition-colors">{(i + 1).toString().padStart(2, "0")}</div>
+                </div>
 
-                  <!-- Name column - only shown on mobile -->
-                  <div class="flex flex-col sm:hidden flex-1 min-w-0">
-                    <div class="flex items-center gap-2">
-                      <h2 class="text-sm font-medium text-zinc-300 group-hover:text-white truncate">{route.name}</h2>
-                      {#if route.featured}
-                        <span class="flex items-center justify-center">
-                          <Star size={12} class="text-primary" />
-                        </span>
-                      {/if}
-                    </div>
-                    <p class="text-xs text-zinc-500 truncate">{route.path}</p>
-
-                    {#if route.tags && route.tags.length > 0}
-                      <div class="flex flex-wrap gap-1 mt-1.5">
-                        {#each route.tags.slice(0, 2) as tag}
-                          <span class="px-1 py-0.5 text-[9px] bg-zinc-800/50 text-zinc-400 rounded-full">
-                            {tag}
-                          </span>
-                        {/each}
-                        {#if route.tags.length > 2}
-                          <span class="px-1 py-0.5 text-[9px] bg-zinc-800/50 text-zinc-400 rounded-full">
-                            +{route.tags.length - 2}
-                          </span>
-                        {/if}
-                      </div>
-                    {/if}
-                  </div>
-
-                  <!-- Name column - desktop -->
-                  <div class="hidden sm:flex items-center gap-2 truncate">
+                <!-- Name column -->
+                <div class="p-3 sm:p-4 min-w-0">
+                  <div class="flex flex-row items-center gap-2">
                     <h2 class="text-sm font-medium text-zinc-300 group-hover:text-white truncate">{route.name}</h2>
                     {#if route.featured}
                       <span class="flex items-center justify-center">
@@ -677,70 +658,90 @@
                     {/if}
                   </div>
 
-                  <!-- Path column - desktop -->
-                  <div class="hidden sm:block">
-                    <p class="text-xs text-zinc-500 truncate">{route.path}</p>
-                    {#if route.tags && route.tags.length > 0}
-                      <div class="flex flex-wrap gap-1 mt-1">
-                        {#each route.tags.slice(0, 3) as tag}
-                          <span class="px-1.5 py-0.5 text-[9px] bg-zinc-800/50 text-zinc-400 rounded-full">
-                            {tag}
-                          </span>
-                        {/each}
-                        {#if route.tags.length > 3}
-                          <span class="px-1 py-0.5 text-[9px] bg-zinc-800/50 text-zinc-400 rounded-full">
-                            +{route.tags.length - 3}
-                          </span>
-                        {/if}
-                      </div>
-                    {/if}
-                  </div>
+                  <!-- Mobile: Show path below name -->
+                  <p class="text-xs text-zinc-500 truncate sm:hidden mt-1">{route.path}</p>
 
-                  <!-- Status column -->
-                  <div class="ml-auto sm:ml-0">
-                    {#if isCurrentRoute(route.path)}
-                      <div class="flex items-center px-2 py-1 rounded bg-primary/10 border border-primary/20">
-                        <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse mr-1.5"></div>
-                        <span class="text-xs uppercase text-zinc-300">Active</span>
-                      </div>
-                    {:else if route.status}
-                      <div class="flex items-center justify-evenly px-2 py-1 mx-8 rounded {route.status === 'WIP' ? 'bg-amber-500/10 border border-amber-500/20' : route.status === 'Completed' ? 'bg-green-500/10 border border-green-500/20' : 'bg-zinc-500/10 border border-zinc-500/20'}">
-                        <span class="text-xs {route.status === 'WIP' ? 'text-amber-300' : route.status === 'Completed' ? 'text-green-300' : 'text-zinc-400'}">{route.status}</span>
-                      </div>
-                    {:else if !hasMetadata(route)}
-                      {#if dev}
-                        <button
-                          onclick={(e) => handleMetadataButtonClick(e, route)}
-                          class="px-2 py-1 text-xs border border-zinc-700 rounded bg-zinc-800 text-zinc-300
-                                hover:bg-zinc-700 hover:text-white transition-colors flex items-center relative z-10 group/meta"
-                          disabled={isGeneratingMetadata}
-                        >
-                          {#if isGeneratingMetadata}
-                            <div class="w-3 h-3 rounded-full border border-zinc-500 border-t-zinc-300 animate-spin mr-1"></div>
-                            <span>Adding...</span>
-                          {:else}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <line x1="12" y1="5" x2="12" y2="19"></line>
-                              <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                            <span class="w-0 overflow-hidden group-hover/meta:w-auto group-hover/meta:ml-0.5 transition-all duration-200">Metadata</span>
-                          {/if}
-                        </button>
+                  <!-- Mobile: Show tags below path -->
+                  {#if route.tags && route.tags.length > 0}
+                    <div class="flex flex-wrap gap-1 mt-1.5 sm:hidden">
+                      {#each route.tags.slice(0, 2) as tag}
+                        <span class="px-1 py-0.5 text-[9px] bg-zinc-800/50 text-zinc-400 rounded-full">
+                          {tag}
+                        </span>
+                      {/each}
+                      {#if route.tags.length > 2}
+                        <span class="px-1 py-0.5 text-[9px] bg-zinc-800/50 text-zinc-400 rounded-full">
+                          +{route.tags.length - 2}
+                        </span>
                       {/if}
-                    {:else}
-                      <div class="w-6 h-6 rounded opacity-60 flex items-center justify-center group-hover:opacity-100 transition-opacity">
-                        <ArrowUpRight size={14} class="text-zinc-500 group-hover:text-white transition-colors duration-200" />
-                      </div>
-                    {/if}
-                  </div>
-
-                  <!-- Links column -->
-                  {#if dev}
-                    <div class="hidden sm:flex items-center justify-center">
-                      <ArrowUpRight size={16} class="text-muted-foreground group-hover:text-primary transition-colors duration-200" />
                     </div>
                   {/if}
                 </div>
+
+                <!-- Path column - desktop only -->
+                <div class="hidden sm:block p-4">
+                  <p class="text-xs text-zinc-500 truncate">{route.path}</p>
+                  {#if route.tags && route.tags.length > 0}
+                    <div class="flex flex-wrap gap-1 mt-1">
+                      {#each route.tags.slice(0, 3) as tag}
+                        <span class="px-1.5 py-0.5 text-[9px] bg-zinc-800/50 text-zinc-400 rounded-full">
+                          {tag}
+                        </span>
+                      {/each}
+                      {#if route.tags.length > 3}
+                        <span class="px-1 py-0.5 text-[9px] bg-zinc-800/50 text-zinc-400 rounded-full">
+                          +{route.tags.length - 3}
+                        </span>
+                      {/if}
+                    </div>
+                  {/if}
+                </div>
+
+                <!-- Status column -->
+                <div class="p-3 sm:p-4 flex items-center justify-center min-w-0">
+                  {#if isCurrentRoute(route.path)}
+                    <div class="flex items-center px-1.5 py-1 sm:px-2 rounded bg-primary/10 border border-primary/20 min-w-0">
+                      <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse mr-1.5 shrink-0"></div>
+                      <span class="text-xs uppercase text-zinc-300 hidden sm:inline truncate">Active</span>
+                      <span class="text-[10px] uppercase text-zinc-300 sm:hidden truncate">Act</span>
+                    </div>
+                  {:else if route.status}
+                    <div class="w-full flex items-center justify-center py-1.5 mx-2 rounded min-w-0 {route.status === 'WIP' ? 'bg-amber-500/10 border border-amber-500/20' : route.status === 'Completed' ? 'bg-green-500/10 border border-green-500/20' : 'bg-zinc-500/10 border border-zinc-500/20'}">
+                      <span class="text-xs truncate {route.status === 'WIP' ? 'text-amber-300' : route.status === 'Completed' ? 'text-green-300' : 'text-zinc-400'}">{route.status}</span>
+                    </div>
+                  {:else if !hasMetadata(route)}
+                    {#if dev}
+                      <button
+                        onclick={(e) => handleMetadataButtonClick(e, route)}
+                        class="px-1.5 py-1 sm:px-2 text-xs border border-zinc-700 rounded bg-zinc-800 text-zinc-300
+                              hover:bg-zinc-700 hover:text-white transition-colors flex items-center relative z-10 group/meta"
+                        disabled={isGeneratingMetadata}
+                      >
+                        {#if isGeneratingMetadata}
+                          <div class="w-3 h-3 rounded-full border border-zinc-500 border-t-zinc-300 animate-spin sm:mr-1"></div>
+                          <span class="hidden sm:inline">Adding...</span>
+                        {:else}
+                          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                          </svg>
+                          <span class="w-0 overflow-hidden group-hover/meta:w-auto group-hover/meta:ml-0.5 transition-all duration-200 hidden sm:inline">Metadata</span>
+                        {/if}
+                      </button>
+                    {/if}
+                  {:else}
+                    <div class="w-5 h-5 sm:w-6 sm:h-6 rounded opacity-60 flex items-center justify-center group-hover:opacity-100 transition-opacity">
+                      <ArrowUpRight size={12} class="sm:size-4 text-zinc-500 group-hover:text-white transition-colors duration-200" />
+                    </div>
+                  {/if}
+                </div>
+
+                <!-- Links column -->
+                {#if dev}
+                  <div class="hidden sm:flex items-center justify-center p-4">
+                    <ArrowUpRight size={16} class="text-muted-foreground group-hover:text-primary transition-colors duration-200" />
+                  </div>
+                {/if}
               </a>
             {/each}
           </div>
