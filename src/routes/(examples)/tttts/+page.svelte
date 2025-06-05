@@ -3,7 +3,7 @@
   import { Textarea } from "$lib/components/ui/textarea";
   import * as Select from "$lib/components/ui/select/index";
   import { cn } from "$lib/utils";
-  import { AlertCircle, Loader2, Play, Save, Pause, Volume2, VolumeX } from "lucide-svelte";
+  import { AlertCircle, Loader2, Play, Save, Pause, Volume2, VolumeX } from "@lucide/svelte";
 
   type VoiceCategories = {
     [category: string]: {

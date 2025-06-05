@@ -2,7 +2,7 @@
   import * as Card from "$lib/components/ui/3d-card";
   let isMouseEntered = false;
 
-  import { Apple, Smartphone, ArrowRight, Search, HelpCircle, Wifi, MoreVertical, Plus, Star } from "lucide-svelte";
+  import { Apple, Smartphone, ArrowRight, Search, HelpCircle, Wifi, MoreVertical, Plus, Star } from "@lucide/svelte";
   import Button from "$lib/components/ui/button/button.svelte";
   import { cn } from "$lib/utils";
 

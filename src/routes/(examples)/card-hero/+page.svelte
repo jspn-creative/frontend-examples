@@ -1,6 +1,6 @@
 <script lang="ts">
   import SpinningText from "$lib/components/SpinningText.svelte";
-  import { ArrowRight, ArrowUpRight } from "lucide-svelte";
+  import { ArrowRight, ArrowUpRight } from "@lucide/svelte";
 </script>
 
 <div class="min-h-screen bg-zinc-950 sm:bg-[#0c1414] p-4 md:p-8 flex items-center justify-center">

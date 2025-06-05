@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from "$app/state";
   import { dev } from "$app/environment";
-  import { ExternalLinkIcon, Grid, List, ChevronRight, Server, ArrowUpRight, Layers, ExternalLink, Image, Command, RefreshCcw, Star, Plus, ArrowUpDown } from "lucide-svelte";
+  import { ExternalLinkIcon, Grid, List, ChevronRight, Server, ArrowUpRight, Layers, ExternalLink, Image, Command, RefreshCcw, Star, Plus, ArrowUpDown } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
