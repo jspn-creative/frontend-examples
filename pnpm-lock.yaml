@@ -8,12 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@fontsource-variable/bodoni-moda':
+        specifier: ^5.2.5
+        version: 5.2.5
       '@fontsource-variable/dm-sans':
         specifier: ^5.2.5
         version: 5.2.5
       '@fontsource-variable/space-grotesk':
         specifier: ^5.2.6
         version: 5.2.6
+      '@fontsource/boldonse':
+        specifier: ^5.2.3
+        version: 5.2.3
       '@fontsource/space-mono':
         specifier: ^5.2.5
         version: 5.2.5
@@ -496,11 +502,17 @@ packages:
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
 
+  '@fontsource-variable/bodoni-moda@5.2.5':
+    resolution: {integrity: sha512-ya0j42m4uutQcC+Db7xgwZCacwKKsA+UebhfDg8LQtWNhoJjAAKX5eMIKLbQ9WmUxf7JUpBfNLj96Mu1eb0FCA==}
+
   '@fontsource-variable/dm-sans@5.2.5':
     resolution: {integrity: sha512-ynWdb1Ncn5ywUOE6OkTsvgjkiZKj+xM/GS2iVE47MBvS3AlfOSyOy3xynfkQsM3ngaxdCamT/06hZGAgPmao0A==}
 
   '@fontsource-variable/space-grotesk@5.2.6':
     resolution: {integrity: sha512-caoLd9SfhtOGYNIis8ek+sOGxO0NNJ5xGcTtlhCG3UA9N4xPa1AkeCDNOABocH0djVKHYl23CYtsmuDFqh3tiQ==}
+
+  '@fontsource/boldonse@5.2.3':
+    resolution: {integrity: sha512-IHhdSLmaR3xRH6qlhf/9OnkgzxKH4mkcbK4Bgs9o5YNb/cC+5h/U9immTeze9ky90liN+xad8hhC/N6v5cgfgA==}
 
   '@fontsource/space-mono@5.2.5':
     resolution: {integrity: sha512-yFU6K17ko4LEDHl5554n6mCrmDbuc2xYGCZZkCRpAvRtCaJisUjxFdDdph2d2hiIElaiMlinmkmV8IWlbQCMJA==}
@@ -2065,9 +2077,13 @@ snapshots:
 
   '@floating-ui/utils@0.2.9': {}
 
+  '@fontsource-variable/bodoni-moda@5.2.5': {}
+
   '@fontsource-variable/dm-sans@5.2.5': {}
 
   '@fontsource-variable/space-grotesk@5.2.6': {}
+
+  '@fontsource/boldonse@5.2.3': {}
 
   '@fontsource/space-mono@5.2.5': {}
 

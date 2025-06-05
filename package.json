@@ -44,8 +44,10 @@
 		"wrangler": "^4.18.0"
 	},
 	"dependencies": {
+		"@fontsource-variable/bodoni-moda": "^5.2.5",
 		"@fontsource-variable/dm-sans": "^5.2.5",
 		"@fontsource-variable/space-grotesk": "^5.2.6",
+		"@fontsource/boldonse": "^5.2.3",
 		"@fontsource/space-mono": "^5.2.5",
 		"@threlte/core": "^8.0.4",
 		"@threlte/extras": "^9.2.1",

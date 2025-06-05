@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "@fontsource-variable/space-grotesk";
 @import "@fontsource/space-mono";
+@import "@fontsource/boldonse";
+@import "@fontsource-variable/bodoni-moda";
+
+@theme {
+  --breakpoint-xs: 30rem;
+}
 
 @custom-variant dark (&:where(.dark, .dark *));
 @layer base {
