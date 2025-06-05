@@ -2,43 +2,67 @@
   import { T, useTask, useThrelte } from "@threlte/core";
   import { OrbitControls } from "@threlte/extras";
   import * as THREE from "three";
-  import { Vector3, Color, SphereGeometry, TorusGeometry, TorusKnotGeometry, MeshPhysicalMaterial, ShaderMaterial, AdditiveBlending, BufferGeometry, BufferAttribute, Points, TextureLoader, CubeTextureLoader, DoubleSide } from "three";
+  import { Vector3, Vector2, Color, SphereGeometry, TorusGeometry, TorusKnotGeometry, MeshPhysicalMaterial, ShaderMaterial, AdditiveBlending, BufferGeometry, BufferAttribute, Points, TextureLoader, CubeTextureLoader, DoubleSide } from "three";
   import { EffectComposer, EffectPass, RenderPass, BloomEffect, KernelSize, BlendFunction } from "postprocessing";
   import { onMount } from "svelte";
+
   import snoiseShader from "./noise/snoise.glsl?raw";
 
-  const geometries = [new TorusKnotGeometry(6, 2, 140, 140), new SphereGeometry(8, 140, 140), new TorusGeometry(6, 3, 140, 140)];
-  const geometryNames = ["Torus Knot", "Sphere", "Torus"];
+  interface Props {
+    controls?: {
+      // Mesh
+      meshVisible: boolean;
+      meshColor: string;
+      bloomStrength: number;
+      rotationY: number;
+      // Dissolve
+      dissolveProgress: number;
+      edgeWidth: number;
+      frequency: number;
+      amplitude: number;
+      edgeColor: string;
+      autoDissolve: boolean;
+      // Particles
+      particleVisible: boolean;
+      particleBaseSize: number;
+      particleColor: string;
+      particleSpeedFactor: number;
+      waveAmplitude: number;
+      velocityFactor: { x: number; y: number };
+    };
+    currentGeometry?: number;
+  }
 
-  let currentGeometry = $state(2);
+  let {
+    controls = {
+      // Mesh
+      meshVisible: true,
+      meshColor: "#72a3ff",
+      bloomStrength: 1,
+      rotationY: 0,
+      // Dissolve
+      dissolveProgress: 3.5,
+      edgeWidth: 2.5,
+      frequency: 1.25,
+      amplitude: 18.0,
+      edgeColor: "#4d9bff",
+      autoDissolve: true,
+      // Particles
+      particleVisible: true,
+      particleBaseSize: 230,
+      particleColor: "#4d9bff",
+      particleSpeedFactor: 0.01,
+      waveAmplitude: 0,
+      velocityFactor: { x: 0, y: 2 },
+    },
+    currentGeometry = 2,
+  }: Props = $props();
+
+  const geometries = [new TorusKnotGeometry(6, 2, 140, 140), new SphereGeometry(8, 140, 140), new TorusGeometry(6, 3, 140, 140)];
+
   let time = $state(0);
   let autoDissolve = $state(true);
   let dissolving = $state(true);
-
-  // Tweakpane
-  const controls = $state({
-    // Mesh
-    meshVisible: true,
-    meshColor: "#72a3ff",
-    bloomStrength: 1,
-    rotationY: 0,
-
-    // Dissolve
-    dissolveProgress: 3.5,
-    edgeWidth: 2.5,
-    frequency: 1.25,
-    amplitude: 18.0,
-    edgeColor: "#4d9bff",
-    autoDissolve: true,
-
-    // Particles
-    particleVisible: true,
-    particleBaseSize: 230,
-    particleColor: "#4d9bff",
-    particleSpeedFactor: 0.01,
-    waveAmplitude: 0,
-    velocityFactor: { x: 0, y: 2 },
-  });
 
   // Mesh references
   let dissolveMesh = $state<THREE.Mesh | undefined>(undefined);
@@ -46,13 +70,10 @@
   let particleGeometry = $state<THREE.BufferGeometry | undefined>(undefined);
   let particleMaterial = $state<THREE.ShaderMaterial | undefined>(undefined);
 
-  // Post-processing
   const { renderer, scene, camera, size, renderStage, autoRender } = useThrelte();
   let composer: EffectComposer | undefined = undefined;
   let bloomEffect: BloomEffect | undefined = undefined;
-  let controller: any | undefined = undefined;
 
-  // Dissolve uniforms
   const dissolveUniforms = {
     uEdgeColor: { value: new Color(parseInt(controls.edgeColor.replace("#", ""), 16)) },
     uMeshColor: { value: new Color(parseInt(controls.meshColor.replace("#", ""), 16)) },
@@ -62,7 +83,6 @@
     uEdge: { value: 0.8 },
   };
 
-  // Particle uniforms
   const particleUniforms = {
     uTexture: { value: null as THREE.Texture | null },
     uPixelDensity: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
@@ -74,7 +94,6 @@
     uColor: { value: new Color(0x4d9bff) },
   };
 
-  // Particle system data
   let particleCount = 0;
   let particleMaxOffsetArr: Float32Array;
   let particleInitPosArr: Float32Array;
@@ -84,8 +103,8 @@
   let particleRotationArr: Float32Array;
 
   const particleData = {
-    particleSpeedFactor: 0.02,
-    velocityFactor: { x: 2.5, y: 2 },
+    particleSpeedFactor: 0,
+    velocityFactor: { x: 0, y: 0 },
     waveAmplitude: 0,
   };
 
@@ -302,6 +321,12 @@
     }
 
     composer = new EffectComposer(renderer);
+
+    // Set proper size with device pixel ratio
+    const pixelRatio = renderer.getPixelRatio();
+    const canvasSize = renderer.getSize(new Vector2());
+    composer.setSize(canvasSize.x * pixelRatio, canvasSize.y * pixelRatio);
+
     composer.addPass(new RenderPass(scene, camera.current));
 
     bloomEffect = new BloomEffect({
@@ -314,61 +339,6 @@
     });
 
     composer.addPass(new EffectPass(camera.current, bloomEffect));
-  }
-
-  function setupTweakpane() {
-    if (typeof window === "undefined") return;
-
-    import("tweakpane")
-      .then(({ Pane }) => {
-        controller = new Pane({
-          title: "Controls",
-          expanded: true,
-        });
-
-        const meshFolder = controller.addFolder({ title: "Mesh", expanded: false });
-
-        const geometryList = meshFolder.addBlade({
-          view: "list",
-          label: "Mesh",
-          options: geometryNames.map((name, i) => ({ text: name, value: i })),
-          value: currentGeometry,
-        });
-
-        geometryList.on("change", (e: any) => {
-          currentGeometry = e.value;
-        });
-
-        meshFolder.addBinding(controls, "bloomStrength", { min: 1, max: 20, step: 0.01, label: "Bloom Strength" });
-        meshFolder.addBinding(controls, "rotationY", { min: -Math.PI * 2, max: Math.PI * 2, step: 0.01, label: "Rotation Y" });
-
-        // Dissolve controls
-        const dissolveFolder = controller.addFolder({ title: "Dissolve Effect", expanded: false });
-        dissolveFolder.addBinding(controls, "meshVisible", { label: "Visible" });
-        dissolveFolder.addBinding(controls, "dissolveProgress", { min: -20, max: 20, step: 0.0001, label: "Progress" });
-        dissolveFolder.addBinding(controls, "autoDissolve", { label: "Auto Animate" });
-        dissolveFolder.addBinding(controls, "edgeWidth", { min: 0.1, max: 8, step: 0.001, label: "Edge Width" });
-        dissolveFolder.addBinding(controls, "frequency", { min: 0.001, max: 2, step: 0.001, label: "Frequency" });
-        dissolveFolder.addBinding(controls, "amplitude", { min: 0.1, max: 20, step: 0.001, label: "Amplitude" });
-        dissolveFolder.addBinding(controls, "meshColor", { label: "Mesh Color" });
-        dissolveFolder.addBinding(controls, "edgeColor", { label: "Edge Color" });
-
-        // Particle controls
-        const particleFolder = controller.addFolder({ title: "Particle", expanded: false });
-        particleFolder.addBinding(controls, "particleVisible", { label: "Visible" });
-        particleFolder.addBinding(controls, "particleBaseSize", { min: 10, max: 400, step: 0.01, label: "Base size" });
-        particleFolder.addBinding(controls, "particleColor", { label: "Color" });
-        particleFolder.addBinding(controls, "particleSpeedFactor", { min: 0.001, max: 0.1, step: 0.001, label: "Speed" });
-        particleFolder.addBinding(controls, "waveAmplitude", { min: 0, max: 5, step: 0.01, label: "Wave Amp" });
-        particleFolder.addBinding(controls, "velocityFactor", {
-          picker: "inline",
-          expanded: true,
-          label: "Velocity Factor",
-        });
-      })
-      .catch((err) => {
-        console.error("Failed to load tweakpane:", err);
-      });
   }
 
   // Handle geometry change
@@ -405,6 +375,13 @@
     const bloomStrength = controls.bloomStrength;
     if (bloomEffect) {
       bloomEffect.intensity = bloomStrength;
+    }
+  });
+
+  $effect(() => {
+    if (composer && renderer && size.current) {
+      const pixelRatio = renderer.getPixelRatio();
+      composer.setSize(size.current.width * pixelRatio, size.current.height * pixelRatio);
     }
   });
 
@@ -448,15 +425,19 @@
 
   onMount(() => {
     autoRender.set(false);
-    setupTweakpane();
+
+    // Configure renderer for better quality
+    if (renderer) {
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    }
+
     setupPostProcessing();
 
     return () => {
       if (composer) {
         composer.dispose();
-      }
-      if (controller) {
-        controller.dispose();
       }
       autoRender.set(true);
     };
