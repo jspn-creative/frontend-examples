@@ -791,9 +791,16 @@
       </div>
 
       <!-- Footer -->
-      <div class="mt-6 pt-4 border-t border-zinc-800/50 flex justify-between items-center">
-        <div class="text-xs text-zinc-500">
-          <span class="text-zinc-400">{sortedAndFilteredRoutes.length}</span> of {routes.length} routes
+      <div class="mt-6 pt-4 border-t border-zinc-800/50 flex justify-between items-center flex-col xs:flex-row max-xs:text-center gap-4">
+        <div class="text-xs/[1] text-zinc-500 flex flex-col xs:flex-row items-center xs:gap-1">
+          <div>
+            <span class="text-zinc-400">{sortedAndFilteredRoutes.length}</span>
+            of <span class="text-zinc-400">{routes.length}</span> routes
+          </div>
+          {#if !dev && routes.some((route) => route.hidden)}
+            {@const hiddenCount = routes.filter((route) => route.hidden).length}
+            <div class="text-zinc-700">({hiddenCount} route{hiddenCount === 1 ? "" : "s"} unavailable)</div>
+          {/if}
         </div>
         <div class="text-xs text-zinc-500 flex items-center gap-1.5">
           <a href="https://jaspin.io" target="_blank" class="hover:text-primary transition-colors duration-200">jspn<span class="font-extrabold">creative</span></a>
