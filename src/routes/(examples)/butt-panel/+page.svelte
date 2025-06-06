@@ -2,12 +2,28 @@
   import { Canvas } from "@threlte/core";
   // import SVGPanel from "./svgbtn.svelte";
   import SVGPanel from "./butt-panel.svelte";
-  import Scene from "./DreamyParticleScene.svelte";
-  // import Scene from "./MotionBloomScene.svelte";
-  // import Scene from "./GlowScene.svelte";
+  import ParticleTubeTest from "./ParticleTubeTest.svelte";
+  import MotionBloomSceneTest from "./MotionBloomSceneTest.svelte";
+  import ParticleScene from "./ParticleScene.svelte";
+  import GlowScene from "./GlowScene.svelte";
   import { innerWidth, innerHeight } from "svelte/reactivity/window";
-  import { ThemeUtils, Pane, Checkbox, List, TabGroup, TabPage, Folder, Slider, type ListOptions } from "svelte-tweakpane-ui";
+  import { ThemeUtils, Pane, Checkbox, List, TabGroup, TabPage, Folder, Slider, type ListOptions, Button, Separator } from "svelte-tweakpane-ui";
   // ThemeUtils.setGlobalDefaultTheme(ThemeUtils.presets.translucent);
+  import { buttPanelState, sceneOptions, textureOptions } from "./buttPanelState.svelte";
+  import { setContext } from "svelte";
+
+  // Scene components array
+  const sceneComponents = [ParticleTubeTest, MotionBloomSceneTest, GlowScene, ParticleScene];
+  
+  // Get current scene component
+  const Scene = $derived(sceneComponents[buttPanelState.selectedScene]);
+  
+  // Get current scene state
+  const currentSceneState = $derived(buttPanelState.currentSceneState);
+  
+  // Set context for scene components to access state
+  const SCENE_STATE_KEY = Symbol('scene-state');
+  setContext(SCENE_STATE_KEY, currentSceneState);
 
   let isActive = $state(false);
   let isTextured = $state(true);
@@ -32,16 +48,6 @@
     isActive = !isActive;
   }
 
-  const textureOptions: ListOptions<number> = {
-    "Distressed Metal": 1,
-    "Corroded Metal": 2,
-    "Leathery Metal": 3,
-    "Streaked Metal": 4,
-    "Scuffed Metal": 5,
-    "Grainy Metal": 6,
-    "Scratched Metal": 7,
-  };
-
   const glowColor = "#ff0000";
 
   let borderElement: HTMLDivElement;
@@ -51,12 +57,12 @@
     const updateBorderRect = () => {
       if (borderElement && innerWidth.current && innerHeight.current) {
         const rect = borderElement.getBoundingClientRect();
-        borderRect = {
+        buttPanelState.updateBorderRect({
           x: rect.left,
           y: rect.top,
           width: rect.width,
           height: rect.height,
-        };
+        });
       }
     };
 
@@ -74,35 +80,61 @@
 
   // $inspect(borderRect);
   $inspect(innerWidth.current);
+
+  // Handle scene selection change
+  function handleSceneChange(value: number) {
+    buttPanelState.updateSelectedScene(value);
+  }
+
+  // Get UI config from current scene state
+  const uiConfig = $derived(currentSceneState.getUIConfig());
 </script>
 
 <!-- Tweakpane UI -->
 <Pane position="draggable" title="Effect Config" expanded x={innerWidth.current - 350} padding="75px 7px">
-  <Checkbox bind:value={isTextured} label="Textured" />
-  <List bind:value={texture} label="Texture" options={textureOptions} />
+  <!-- Global Controls -->
+  <Checkbox bind:value={buttPanelState.isTextured} label="Textured" />
+  <List bind:value={buttPanelState.texture} label="Texture" options={textureOptions} />
 
   <TabGroup>
     <TabPage title="3D Settings">
-      <Checkbox bind:value={isActive} label="Glow Effect" />
-      <Checkbox bind:value={showTest} label="Show Test Geometry" />
-
-      <Folder title="Post Processing" expanded={false}>
-        <Slider bind:value={bloomIntensity} label="Bloom Intensity" min={0} max={3} step={0.1} />
-        <Slider bind:value={bloomThreshold} label="Bloom Threshold" min={0} max={1} step={0.01} />
-        <Slider bind:value={bloomRadius} label="Bloom Radius" min={0} max={1} step={0.01} />
-        <Slider bind:value={exposure} label="Exposure" min={0.1} max={2} step={0.1} />
-      </Folder>
-
-      <Folder title="3D Controls" expanded={false}>
-        <Slider bind:value={tubeRadius} label="Tube Radius" min={1} max={10} step={0.1} />
-      </Folder>
-
-      <Folder title="Particle Controls" expanded={false}>
-        <Slider bind:value={particleSize} label="Particle Size" min={0.05} max={2} step={0.05} />
-        <Slider bind:value={maxParticleSize} label="Max Particle Size" min={0.25} max={3} step={0.25} />
-        <Slider bind:value={particleSpread} label="Particle Spread" min={5} max={50} step={1} />
-        <Slider bind:value={particleCount} label="Particle Count" min={1000} max={15000} step={500} />
-      </Folder>
+      <Checkbox bind:value={buttPanelState.isActive} label="Glow Effect" />
+      <List 
+        value={buttPanelState.selectedScene} 
+        on:change={(e) => handleSceneChange(e.detail.value)}
+        label="Scene Type" 
+        options={sceneOptions} 
+      />
+      <Checkbox bind:value={buttPanelState.showTest} label="Show Test Geometry" />
+      
+      <Separator />
+      
+      <!-- Dynamic scene-specific controls -->
+      {#each uiConfig.folders as folder}
+        <Folder title={folder.title} expanded={folder.expanded}>
+          {#each folder.controls as control}
+            {#if control.type === 'slider'}
+              <Slider 
+                bind:value={currentSceneState[control.key]} 
+                label={control.label} 
+                min={control.min} 
+                max={control.max} 
+                step={control.step} 
+              />
+            {:else if control.type === 'checkbox'}
+              <Checkbox 
+                bind:value={currentSceneState[control.key]} 
+                label={control.label} 
+              />
+            {/if}
+          {/each}
+        </Folder>
+      {/each}
+      
+      <Separator />
+      
+      <!-- Reset button -->
+      <Button title="Reset Scene Settings" on:click={() => currentSceneState.resetToDefaults()} />
     </TabPage>
   </TabGroup>
 </Pane>
@@ -110,7 +142,12 @@
 <div class="bg-[#0E0F0D] min-h-screen flex flex-col gap-6 items-center justify-center">
   <!-- <h2 class="text-[#6A6B66] font-bold">Click the SEAS logo:</h2> -->
   <div class="relative max-w-full h-[80vh] aspect-[9/16]]">
-    <SVGPanel {toggleGlow} isGlowing={isActive} {isTextured} {texture} />
+    <SVGPanel 
+      toggleGlow={buttPanelState.toggleGlow} 
+      isGlowing={buttPanelState.isActive} 
+      isTextured={buttPanelState.isTextured} 
+      texture={buttPanelState.texture} 
+    />
     <div class="@container bg-[#000] border-4 border-[#090B09] absolute top-[3%] inset-x-[15%] h-6 pointer-events-none">
       <div class="relative">
         <!-- User Avatar: -->
@@ -135,14 +172,14 @@
       </div>
     </div>
     <div bind:this={borderElement} class="absolute inset-0 pointer-events-none">
-      {#if showTest}
-        <div class="absolute top-0 left-0 border border-red-500" style="width: {borderRect.width}px; height: {borderRect.height}px; ">
+      {#if buttPanelState.showTest}
+        <div class="absolute top-0 left-0 border border-red-500" style="width: {buttPanelState.borderRect.width}px; height: {buttPanelState.borderRect.height}px; ">
           <div class="p-4">
-            <p><span class="font-bold">Border x:</span> {Math.round(borderRect.x)}px</p>
-            <p><span class="font-bold">Border y:</span> {Math.round(borderRect.y)}px</p>
+            <p><span class="font-bold">Border x:</span> {Math.round(buttPanelState.borderRect.x)}px</p>
+            <p><span class="font-bold">Border y:</span> {Math.round(buttPanelState.borderRect.y)}px</p>
             <br />
-            <p><span class="font-bold">Border w:</span> {Math.round(borderRect.width)}px</p>
-            <p><span class="font-bold">Border h:</span> {Math.round(borderRect.height)}px</p>
+            <p><span class="font-bold">Border w:</span> {Math.round(buttPanelState.borderRect.width)}px</p>
+            <p><span class="font-bold">Border h:</span> {Math.round(buttPanelState.borderRect.height)}px</p>
             <br />
             <p><span class="font-bold">innerWidth:</span> {Math.round(innerWidth.current ?? 0)}px</p>
             <p><span class="font-bold">innerHeight:</span> {Math.round(innerHeight.current ?? 0)}px</p>
@@ -155,11 +192,19 @@
         {#if import.meta.env.MODE === "development"}
           {#await import("@threlte/studio") then { Studio }}
             <Studio>
-              <Scene {isActive} {showTest} {glowColor} innerWidth={innerWidth.current} innerHeight={innerHeight.current} {borderRect} {bloomIntensity} {bloomThreshold} {bloomRadius} {exposure} {particleSize} {particleSpread} {particleCount} {tubeRadius} {maxParticleSize} />
+              <Scene 
+                {...buttPanelState.getSceneProps()} 
+                innerWidth={innerWidth.current} 
+                innerHeight={innerHeight.current} 
+              />
             </Studio>
           {/await}
         {:else}
-          <Scene {isActive} {showTest} {glowColor} innerWidth={innerWidth.current} innerHeight={innerHeight.current} {borderRect} {bloomIntensity} {bloomThreshold} {bloomRadius} {exposure} {particleSize} {particleSpread} {particleCount} {tubeRadius} {maxParticleSize} />
+          <Scene 
+            {...buttPanelState.getSceneProps()} 
+            innerWidth={innerWidth.current} 
+            innerHeight={innerHeight.current} 
+          />
         {/if}
       </Canvas>
     </div>
