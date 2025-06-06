@@ -2,8 +2,8 @@
   import { Canvas } from "@threlte/core";
   // import SVGPanel from "./svgbtn.svelte";
   import SVGPanel from "./butt-panel.svelte";
-  import ParticleTubeTest from "./ParticleTubeTest.svelte";
-  import MotionBloomSceneTest from "./MotionBloomSceneTest.svelte";
+  import ParticleTubeTest from "./DreamyParticleScene.svelte";
+  import MotionBloomSceneTest from "./MotionBloomScene.svelte";
   import ParticleScene from "./ParticleScene.svelte";
   import GlowScene from "./GlowScene.svelte";
   import { innerWidth, innerHeight } from "svelte/reactivity/window";
@@ -14,15 +14,15 @@
 
   // Scene components array
   const sceneComponents = [ParticleTubeTest, MotionBloomSceneTest, GlowScene, ParticleScene];
-  
+
   // Get current scene component
   const Scene = $derived(sceneComponents[buttPanelState.selectedScene]);
-  
+
   // Get current scene state
   const currentSceneState = $derived(buttPanelState.currentSceneState);
-  
+
   // Set context for scene components to access state
-  const SCENE_STATE_KEY = Symbol('scene-state');
+  const SCENE_STATE_KEY = Symbol("scene-state");
   setContext(SCENE_STATE_KEY, currentSceneState);
 
   let isActive = $state(false);
@@ -96,58 +96,39 @@
   <Checkbox bind:value={buttPanelState.isTextured} label="Textured" />
   <List bind:value={buttPanelState.texture} label="Texture" options={textureOptions} />
 
-  <TabGroup>
-    <TabPage title="3D Settings">
+  <Separator />
+    <Folder title="Global Settings" expanded>
       <Checkbox bind:value={buttPanelState.isActive} label="Glow Effect" />
-      <List 
-        value={buttPanelState.selectedScene} 
-        on:change={(e) => handleSceneChange(e.detail.value)}
-        label="Scene Type" 
-        options={sceneOptions} 
-      />
-      <Checkbox bind:value={buttPanelState.showTest} label="Show Test Geometry" />
-      
+      <List value={buttPanelState.selectedScene} on:change={(e) => handleSceneChange(e.detail.value)} label="Scene Type" options={sceneOptions} />
+      <Checkbox bind:value={buttPanelState.showTest} label="Show Test Geometry" /></Folder>
+
       <Separator />
-      
+
       <!-- Dynamic scene-specific controls -->
       {#each uiConfig.folders as folder}
         <Folder title={folder.title} expanded={folder.expanded}>
           {#each folder.controls as control}
-            {#if control.type === 'slider'}
-              <Slider 
-                bind:value={currentSceneState[control.key]} 
-                label={control.label} 
-                min={control.min} 
-                max={control.max} 
-                step={control.step} 
-              />
-            {:else if control.type === 'checkbox'}
-              <Checkbox 
-                bind:value={currentSceneState[control.key]} 
-                label={control.label} 
-              />
+            {#if control.type === "slider"}
+              <Slider bind:value={currentSceneState[control.key]} label={control.label} min={control.min} max={control.max} step={control.step} />
+            {:else if control.type === "checkbox"}
+              <Checkbox bind:value={currentSceneState[control.key]} label={control.label} />
             {/if}
           {/each}
         </Folder>
       {/each}
-      
+
       <Separator />
-      
+
       <!-- Reset button -->
       <Button title="Reset Scene Settings" on:click={() => currentSceneState.resetToDefaults()} />
-    </TabPage>
-  </TabGroup>
+    </F>
+  </S>
 </Pane>
 
 <div class="bg-[#0E0F0D] min-h-screen flex flex-col gap-6 items-center justify-center">
   <!-- <h2 class="text-[#6A6B66] font-bold">Click the SEAS logo:</h2> -->
   <div class="relative max-w-full h-[80vh] aspect-[9/16]]">
-    <SVGPanel 
-      toggleGlow={buttPanelState.toggleGlow} 
-      isGlowing={buttPanelState.isActive} 
-      isTextured={buttPanelState.isTextured} 
-      texture={buttPanelState.texture} 
-    />
+    <SVGPanel toggleGlow={buttPanelState.toggleGlow} isGlowing={buttPanelState.isActive} isTextured={buttPanelState.isTextured} texture={buttPanelState.texture} />
     <div class="@container bg-[#000] border-4 border-[#090B09] absolute top-[3%] inset-x-[15%] h-6 pointer-events-none">
       <div class="relative">
         <!-- User Avatar: -->
@@ -192,19 +173,11 @@
         {#if import.meta.env.MODE === "development"}
           {#await import("@threlte/studio") then { Studio }}
             <Studio>
-              <Scene 
-                {...buttPanelState.getSceneProps()} 
-                innerWidth={innerWidth.current} 
-                innerHeight={innerHeight.current} 
-              />
+              <Scene {...buttPanelState.getSceneProps()} innerWidth={innerWidth.current} innerHeight={innerHeight.current} />
             </Studio>
           {/await}
         {:else}
-          <Scene 
-            {...buttPanelState.getSceneProps()} 
-            innerWidth={innerWidth.current} 
-            innerHeight={innerHeight.current} 
-          />
+          <Scene {...buttPanelState.getSceneProps()} innerWidth={innerWidth.current} innerHeight={innerHeight.current} />
         {/if}
       </Canvas>
     </div>
