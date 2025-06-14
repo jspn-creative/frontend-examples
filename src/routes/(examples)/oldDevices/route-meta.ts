@@ -1,9 +1,10 @@
 import type { RouteMeta } from "../../api/routes/+server.ts";
 
 export const meta: RouteMeta = {
-  name: "Eclipse",
-  status: "Completed",
-  note: "",
+  name: "OldDevices",
+  status: "WIP",
+  note: "For reference only.",
   tags: ["3d"],
-  featured: true,
+  featured: false,
+  hidden: true,
 };
