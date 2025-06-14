@@ -4,12 +4,18 @@
     toggleGlow: () => void;
     isTextured?: boolean;
     texture?: number;
+    glowColor?: string;
+    overlay?: number;
+    hasOverlay?: boolean;
   }
 
-  let { isGlowing, toggleGlow, isTextured = false, texture = 1 }: Props = $props();
+  import blueOverlay from "./overlay-blue.svg";
+  import redOverlay from "./overlay-red.svg";
+
+  let { isGlowing, toggleGlow, isTextured = false, texture = 1, glowColor = "#fff", overlay, hasOverlay }: Props = $props();
 </script>
 
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 675 1200">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 675 1200" style="--glow-color: {glowColor};">
   <defs>
     <linearGradient id="linear-gradient" x1="-5.6" x2="-.82" y1="-16535.42" y2="-16535.42" gradientTransform="matrix(1 0 0 -1 6.35 -16534.31)" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#1a1917" />
@@ -754,6 +760,22 @@
   </g>
 </svg>
 
+{#if hasOverlay === true}
+  <img src={overlay === 0 ? redOverlay : blueOverlay} alt="overlay" class="absolute inset-0 pointer-events-none" />
+  <div class="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
+    <svg viewBox="0 0 675 1200" class="w-full h-full" class:active={isGlowing} style="--glow-color: {glowColor};">
+      <g id="SEAS_Logo_Overlay">
+        <path
+          d="M335.18 348.29c-43.54 2.48-65.23 53.58-36.09 86.2 24.34 27.24 69.11 20.53 84.97-12.08 16.93-34.8-10.03-76.33-48.89-74.12Zm10.69 24.77c-9.04-2.47-17.86-.73-25.23 4.98-2.32 1.8-3.93 3.75-5.77 5.99-2.26-.34-4.41-1.18-6.6-1.82l8.68 15.72 15.1-9.14c0-.49-4.25-1.21-4.97-1.45-.35-.12-.77-.15-.82-.63.43.04.68-.23.97-.47 7.85-6.32 18.76-4.83 25.06 2.88 2.12 2.59 2.97 5.5 3.85 8.67l17.86 4.95c5.78 2.31 4.72 7.42 2.88 12.2-6.64 17.26-24.95 28.46-43.4 26.31-12.28-1.43-24.12-8.56-30.39-19.22-.74-.52-5.63 3.31-6.08 2.86l4.82-18.28 18.32 4.81-5.45 3.72c2.23 3.82 6.12 7.42 10.05 9.49 12.58 6.61 28.33 2.9 36.42-8.69l6.87 1.58-8.69-15.38-15.09 8.65c-.57.43.06.56.48.64 1.86.32 3.7 1.24 5.63 1.29.47.43-1.89 2.14-2.27 2.39-9.74 6.44-23.1 1.85-26.82-9.12-.23-.68-.67-3.33-1-3.55-3.39-.86-6.73-2-10.09-3.03-2.63-.8-6.23-1.44-8.69-2.56-2.06-.94-3.63-3.23-3.84-5.49-.25-2.62 2.73-9.12 4.1-11.58 8.99-16.09 27.66-24.41 45.77-20.21 10.39 2.41 20.34 9.27 25.66 18.5l5.77-2.88c.17.18-.97 4.18-1.14 4.82-.22.87-.48 1.62-.71 2.48-.99 3.66-1.92 7.35-2.98 10.99l-18.32-4.81 1.39-1.02 4.39-2.7c-3.41-5.61-9.37-10.1-15.73-11.84Z"
+          class=""
+          style="fill: url(#linear-gradient-29);"
+        />
+        <path d="M336.77 390.29c4.5-.78 7.8 3.32 5.94 7.53-.42.94-1.57 1.9-1.67 2.5-.49 2.86 1.57 9.91-3.05 10.13-4.69.22-2.58-7.35-3.05-10.13-.13-.77-1.09-1.26-1.56-1.97-1.94-2.98-.13-7.45 3.4-8.06Z" class="" style="fill: var(--glow-color);" />
+      </g>
+    </svg>
+  </div>
+{/if}
+
 <div class="absolute inset-0 [box-shadow:inset_0_0_17px_10px_#0E0F0D] pointer-events-none"></div>
 
 <!-- <div class="absolute inset-0 [box-shadow:inset_0_0_17px_10px_#171916] pointer-events-none"></div> -->
@@ -761,6 +783,16 @@
 <style>
   svg {
     @apply h-[80vh];
+  }
+
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 5px oklch(0 0 0 / 0.8)) drop-shadow(0 0 40px color-mix(in srgb, var(--glow-color) 50%, black 50%)) drop-shadow(0 0 80px oklch(from var(--glow-color) l c h / 0.5));
+    }
+    50% {
+      filter: drop-shadow(0 0 5px oklch(1 0 0 / 0.25)) drop-shadow(0 0 10px color-mix(in srgb, var(--glow-color) 20%, black 80%)) drop-shadow(0 0 40px oklch(from var(--glow-color) 0.5 c h / 0.5));
+    }
   }
 
   #butt-top,
@@ -823,11 +855,17 @@
         @apply transition-all duration-150;
       }
     }
-
-    &.active {
-      #SEAS_Logo {
-        filter: drop-shadow(0 0 30px rgba(0, 107, 175, 0.6));
-      }
+  }
+  .active {
+    #SEAS_Logo {
+      animation: pulse-glow 2.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+      /* filter: drop-shadow(0 0 5px oklch(0.25 0 0 / 0.8)) drop-shadow(0 0 20px color-mix(in srgb, var(--glow-color) 50%, black 50%)) drop-shadow(0 0 40px oklch(from var(--glow-color) 0.5 c h / 0.5)); */
+      /* filter: drop-shadow(0 0 5px oklch(1 0 0 / 0.9)) drop-shadow(0 0 20px var(--glow-color)) drop-shadow(0 0 40px oklch(from var(--glow-color) 2 c h / 0.7)); */
+    }
+    #SEAS_Logo_Overlay {
+      animation: pulse-glow 2.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+      /* filter: drop-shadow(0 0 5px oklch(0.25 0 0 / 0.8)) drop-shadow(0 0 20px color-mix(in srgb, var(--glow-color) 50%, black 50%)) drop-shadow(0 0 40px oklch(from var(--glow-color) 0.5 c h / 0.5)); */
+      /* filter: drop-shadow(0 0 5px oklch(1 0 0 / 0.9)) drop-shadow(0 0 20px var(--glow-color)) drop-shadow(0 0 40px oklch(from var(--glow-color) 2 c h / 0.7)); */
     }
   }
 </style>
