@@ -69,13 +69,13 @@
 
   <!-- 3D Scene -->
   <div class="fixed inset-0 z-[2]">
-    <!-- {#await import("@threlte/studio") then { Studio }} -->
-    <Canvas>
-      <!-- <Studio> -->
-      <Scene />
-      <!-- </Studio> -->
-    </Canvas>
-    <!-- {/await} -->
+    {#await import("@threlte/studio") then { Studio }}
+      <Canvas>
+        <Studio>
+          <Scene />
+        </Studio>
+      </Canvas>
+    {/await}
   </div>
 
   <!-- Content overlay -->

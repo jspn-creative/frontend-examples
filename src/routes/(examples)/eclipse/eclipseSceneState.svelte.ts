@@ -1,86 +1,104 @@
-
 export const colorPresets = {
-  default: [1.0, 0.5, 0.2] as const,
+  red: [1.0, 0.2, 0.2] as const,
+  orange: [1.0, 0.5, 0.2] as const,
+  yellow: [1.0, 0.8, 0.1] as const,
+  green: [0.2, 1.0, 0.4] as const,
+  cyan: [0.0, 0.8, 1.0] as const,
   blue: [0.2, 0.4, 1.0] as const,
   purple: [0.8, 0.2, 1.0] as const,
-  green: [0.2, 1.0, 0.4] as const,
-  red: [1.0, 0.2, 0.2] as const,
-  gold: [1.0, 0.8, 0.1] as const,
-  cyan: [0.0, 0.8, 1.0] as const,
   white: [1.0, 1.0, 1.0] as const,
+  cycle: null as unknown as [number, number, number],
 } as const;
 
 export type ColorPreset = keyof typeof colorPresets;
 
 class EclipseSceneState {
-  // Core shader parameters
-  speed = $state(0.8);
-  innerRadius = $state(200.0);
-  outerRadius = $state(600.0);
-  size = $state(800.0);
-  
-  // Flare intensities
-  flareIntensity1 = $state(1.5);
-  flareIntensity2 = $state(1.5);
-  flareIntensity3 = $state(1.5);
-  flareIntensity4 = $state(1.5);
-  
-  // Color settings
-  colorPreset = $state<ColorPreset>('blue');
-  flareColor = $state<[number, number, number]>([1.0, 0.5, 0.2]);
-  
-  // Film grain settings
+  resetToDefaults() {
+    this.speed = 0.8;
+    this.innerRadius = 100.0;
+    this.outerRadius = 300.0;
+    this.size = 350.0;
+    this.flareIntensity1 = 1.5;
+    this.flareIntensity2 = 1.5;
+    this.flareIntensity3 = 1.5;
+    this.flareIntensity4 = 1.5;
+    this.colorPreset = "cycle";
+    this.grainEnabled = true;
+    this.grainAmount = 0.05;
+    this.grainSize = 1.5;
+    this.grainShadowBoost = 0.8;
+    this.bwEnabled = false;
+    this.bwContrast = 1.5;
+    this.mouseProximityEnabled = true;
+    this.mouseProximityStrength = 0.3;
+  }
+
+  speed = $state(0);
+  innerRadius = $state(0);
+  outerRadius = $state(0);
+  size = $state(0);
+
+  flareIntensity1 = $state(0);
+  flareIntensity2 = $state(0);
+  flareIntensity3 = $state(0);
+  flareIntensity4 = $state(0);
+
+  colorPreset = $state<ColorPreset>("cycle");
+  flareColor = $state<[number, number, number]>([0, 0, 0]);
+
   grainEnabled = $state(true);
-  grainAmount = $state(0.05);
-  grainSize = $state(1.5);
-  grainShadowBoost = $state(0.8);
-  
-  // Black and white settings
+  grainAmount = $state(0);
+  grainSize = $state(0);
+  grainShadowBoost = $state(0);
+
   bwEnabled = $state(false);
-  bwContrast = $state(1.2);
-  
-  // Mouse interaction settings
+  bwContrast = $state(0);
+
   mouseProximityEnabled = $state(true);
-  mouseProximityStrength = $state(0.03);
-  
-  // Mouse position tracking
+  mouseProximityStrength = $state(0);
+
   mousePosition = $state({ x: 0.5, y: 0.5 });
   mouseTarget = $state({ x: 0.5, y: 0.5 });
   mouseInside = $state(false);
-  
-  // Performance tracking
+
   fps = $state(0);
   showFps = $state(true);
-  
-  // UI state
+
   showControls = $state(true);
-  
-  // Update flare color when preset changes
+
   updateFlareColor() {
-    this.flareColor = [...colorPresets[this.colorPreset]];
+    if (this.colorPreset === "cycle") {
+      const now = performance.now() / 7000;
+      const keys = Object.keys(colorPresets).filter((k) => k !== "cycle") as ColorPreset[];
+      const idx = Math.floor(now) % keys.length;
+      const nextIdx = (idx + 1) % keys.length;
+      const t = now % 1;
+      const a = colorPresets[keys[idx]];
+      const b = colorPresets[keys[nextIdx]];
+      // Linear interpolation between colors
+      this.flareColor = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+    } else {
+      this.flareColor = [...colorPresets[this.colorPreset]];
+    }
   }
-  
-  // Update mouse position with smooth interpolation
+
   updateMousePosition(targetX: number, targetY: number) {
     this.mouseTarget.x = targetX;
     this.mouseTarget.y = targetY;
     this.mouseInside = true;
   }
-  
-  // Set mouse to center when leaving
+
   resetMousePosition() {
     this.mouseTarget.x = 0.5;
     this.mouseTarget.y = 0.5;
     this.mouseInside = false;
   }
-  
-  // Smooth mouse interpolation (call in animation loop)
+
   interpolateMousePosition(smoothing = 0.1) {
     this.mousePosition.x += (this.mouseTarget.x - this.mousePosition.x) * smoothing;
     this.mousePosition.y += (this.mouseTarget.y - this.mousePosition.y) * smoothing;
   }
-  
-  // Get shader uniforms object
+
   getShaderUniforms() {
     return {
       speed: this.speed,
@@ -103,27 +121,16 @@ class EclipseSceneState {
       mouseProximityStrength: this.mouseProximityStrength,
     };
   }
-  
-  // Reset all parameters to defaults
-  resetToDefaults() {
-    this.speed = 0.8;
-    this.innerRadius = 150.0;
-    this.outerRadius = 400.0;
-    this.size = 400.0;
-    this.flareIntensity1 = 0.5;
-    this.flareIntensity2 = 1.5;
-    this.flareIntensity3 = 0.5;
-    this.flareIntensity4 = 1.0;
-    this.colorPreset = 'default';
-    this.grainEnabled = true;
-    this.grainAmount = 0.05;
-    this.grainSize = 1.5;
-    this.grainShadowBoost = 0.8;
-    this.bwEnabled = false;
-    this.bwContrast = 1.2;
-    this.mouseProximityEnabled = true;
-    this.mouseProximityStrength = 0.03;
+
+  animateCycleColor() {
+    if (this.colorPreset === "cycle") {
+      this.updateFlareColor();
+    }
+  }
+
+  constructor() {
+    this.resetToDefaults();
   }
 }
 
-export const eclipseState = new EclipseSceneState(); 
+export const eclipseState = new EclipseSceneState();
