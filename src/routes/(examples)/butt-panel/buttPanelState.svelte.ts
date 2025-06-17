@@ -1,7 +1,7 @@
-import { ParticleTubeState, GlowEffectState, FireEffectState, GlitchEffectState, RainbowEffectState } from "./sceneStates";
+import { ParticleTubeState, GlowEffectState, FireEffectState, GlitchEffectState, RainbowEffectState, InnerGlowEffectState } from "./sceneStates";
 import type { ListOptions } from "svelte-tweakpane-ui";
 
-const defaultScene = 4;
+const defaultScene = 5;
 
 export const sceneOptions: ListOptions<number> = {
   "Particle Tube": 0,
@@ -9,6 +9,7 @@ export const sceneOptions: ListOptions<number> = {
   "Fire Effect": 2,
   "Glitch Effect": 3,
   "Rainbow Effect": 4,
+  "Inner Glow Effect": 5,
 };
 
 export const textureOptions: ListOptions<number> = {
@@ -32,6 +33,7 @@ const sceneStateFactories = {
   2: () => new FireEffectState(),
   3: () => new GlitchEffectState(),
   4: () => new RainbowEffectState(),
+  5: () => new InnerGlowEffectState(),
 } as const;
 
 export class ButtPanelState {

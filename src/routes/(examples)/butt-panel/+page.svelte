@@ -7,14 +7,15 @@
   import FireEffectScene from "./FireEffectScene.svelte";
   import GlitchEffectScene from "./GlitchEffectScene.svelte";
   import RainbowEffectScene from "./RainbowEffectScene.svelte";
+  import InnerGlowEffectScene from "./InnerGlowEffectScene.svelte";
   import { innerWidth, innerHeight } from "svelte/reactivity/window";
-  import { ThemeUtils, IntervalSlider, Pane, Checkbox, List, TabGroup, TabPage, Folder, Slider, Button, Separator, Color } from "svelte-tweakpane-ui";
+  import { ThemeUtils, IntervalSlider, Pane, Checkbox, List, TabGroup, TabPage, Folder, Slider, Button, Separator, Color, RadioGrid } from "svelte-tweakpane-ui";
 
   // ThemeUtils.setGlobalDefaultTheme(ThemeUtils.presets.translucent);
   import { buttPanelState, sceneOptions, textureOptions, overlayOptions } from "./buttPanelState.svelte";
   import { WebGLRenderer } from "three";
 
-  const sceneComponents = [ParticleTubeScene, GlowEffectScene, FireEffectScene, GlitchEffectScene, RainbowEffectScene];
+  const sceneComponents = [ParticleTubeScene, GlowEffectScene, FireEffectScene, GlitchEffectScene, RainbowEffectScene, InnerGlowEffectScene];
   const Scene = $derived(sceneComponents[buttPanelState.selectedScene]);
   const currentSceneState = $derived(buttPanelState.currentSceneState);
   const debug = $derived(buttPanelState.debug);
@@ -100,6 +101,10 @@
             {@const state = currentSceneState as unknown as Record<string, number>}
             {@const listControl = control as typeof control & { options: any[] }}
             <List bind:value={state[control.key]} label={control.label} options={listControl.options} />
+          {:else if control.type === "radiogrid"}
+            {@const state = currentSceneState as unknown as Record<string, string>}
+            {@const radioGridControl = control as typeof control & { values: string[] }}
+            <RadioGrid bind:value={state[control.key]} label={control.label} values={radioGridControl.values} />
           {/if}
         {/each}
       </Folder>
