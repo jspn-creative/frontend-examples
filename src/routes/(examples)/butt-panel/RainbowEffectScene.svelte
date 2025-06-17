@@ -13,6 +13,8 @@
   const borderRect = $derived(buttPanelState.borderRect);
   const debug = $derived(buttPanelState.debug);
 
+  let animatedAlpha = $state(0);
+
   const currentSceneState = $derived(buttPanelState.currentSceneState as RainbowEffectState);
 
   const planeSize = $derived([innerWidth.current, innerHeight.current]);
@@ -29,6 +31,7 @@
     uBorderRect: { value: new Vector2() },
     uCornerRadius: { value: 0 },
     uAspectRatio: { value: 1.0 },
+    uMasterAlpha: { value: 0.0 },
   };
 
   const vertexShader = `
@@ -49,6 +52,7 @@
     uniform float uEdgeThickness;
     uniform vec3 uColorPhase;
     uniform vec3 uColorMask;
+    uniform float uMasterAlpha;
     varying vec2 vUv;
     #define BOX_SIZE        vec2(0.45, 0.8)
     #define BG_COLOR        vec3(0.0)
@@ -82,7 +86,7 @@
       } else {
         // Apply tanh tonemapping to the color inside
         vec4 color = tanh(value);
-        gl_FragColor = vec4(color.rgb, color.a);
+        gl_FragColor = vec4(color.rgb, color.a * uMasterAlpha);
       }
     }
   `;
@@ -118,6 +122,19 @@
 
   useTask(() => {
     uniforms.uTime.value = clock.getElapsedTime();
+
+    const targetAlpha = isActive ? 1.0 : 0.0;
+    if (animatedAlpha !== targetAlpha) {
+      const easing = 0.08; // Smoothing factor
+      const newAlpha = animatedAlpha + (targetAlpha - animatedAlpha) * easing;
+      if (Math.abs(targetAlpha - newAlpha) < 0.001) {
+        animatedAlpha = targetAlpha;
+      } else {
+        animatedAlpha = newAlpha;
+      }
+    }
+
+    uniforms.uMasterAlpha.value = animatedAlpha;
   });
 </script>
 

@@ -14,6 +14,8 @@
   const borderRect = $derived(buttPanelState.borderRect);
   const debug = $derived(buttPanelState.debug);
 
+  let animatedAlpha = $state(0);
+
   const currentSceneState = $derived(buttPanelState.currentSceneState as GlowEffectState);
 
   const tubeRadius = $derived(currentSceneState.tubeRadius);
@@ -33,6 +35,7 @@
     uAspectRatio: { value: 1.0 },
     uBorderRect: { value: new Vector2() },
     uCornerRadius: { value: 45.0 },
+    uMasterAlpha: { value: 0.0 },
   };
 
   const vertexShader = `
@@ -51,6 +54,7 @@
     uniform float uColorShiftSpeed;
     uniform float uHighlightIntensity;
     uniform vec3 uHighlightColor;
+    uniform float uMasterAlpha;
     varying vec2 vUv;
 
     #define PI 3.14159265359
@@ -167,8 +171,8 @@
 
       vec3 bg = BG_COLOR;
 
-      gl_FragColor.rgb = mix(bg, col.rgb, col.a); //normal blend
-      gl_FragColor.a = col.a;
+      gl_FragColor.rgb = mix(bg, col.rgb, col.a * uMasterAlpha); //normal blend
+      gl_FragColor.a = col.a * uMasterAlpha;
     }
   `;
 
@@ -265,6 +269,23 @@
 
   useTask(() => {
     uniforms.uTime.value = clock.getElapsedTime();
+
+    const targetAlpha = isActive ? 1.0 : 0.0;
+    if (animatedAlpha !== targetAlpha) {
+      const easing = 0.08; // Smoothing factor
+      const newAlpha = animatedAlpha + (targetAlpha - animatedAlpha) * easing;
+      if (Math.abs(targetAlpha - newAlpha) < 0.001) {
+        animatedAlpha = targetAlpha;
+      } else {
+        animatedAlpha = newAlpha;
+      }
+    }
+
+    uniforms.uMasterAlpha.value = animatedAlpha;
+
+    if (tubeMaterial) {
+      tubeMaterial.opacity = animatedAlpha * 0.7;
+    }
   });
 </script>
 
