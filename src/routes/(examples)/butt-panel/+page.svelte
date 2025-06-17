@@ -73,7 +73,7 @@
   {/if}
 
   <Separator />
-  <Folder title="Global Settings" expanded>
+  <Folder title="Global Settings" expanded={false}>
     <Checkbox bind:value={buttPanelState.showTest} label="Show Test Geometry" />
     <Checkbox bind:value={buttPanelState.debug} label="Debug" />
   </Folder>
