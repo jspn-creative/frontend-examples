@@ -6,6 +6,7 @@
   import GlowEffectScene from "./GlowEffectScene.svelte";
   import FireEffectScene from "./FireEffectScene.svelte";
   import GlitchEffectScene from "./GlitchEffectScene.svelte";
+  import RainbowEffectScene from "./RainbowEffectScene.svelte";
   import { innerWidth, innerHeight } from "svelte/reactivity/window";
   import { ThemeUtils, IntervalSlider, Pane, Checkbox, List, TabGroup, TabPage, Folder, Slider, Button, Separator, Color } from "svelte-tweakpane-ui";
 
@@ -13,7 +14,7 @@
   import { buttPanelState, sceneOptions, textureOptions, overlayOptions } from "./buttPanelState.svelte";
   import { WebGLRenderer } from "three";
 
-  const sceneComponents = [ParticleTubeScene, GlowEffectScene, FireEffectScene, GlitchEffectScene];
+  const sceneComponents = [ParticleTubeScene, GlowEffectScene, FireEffectScene, GlitchEffectScene, RainbowEffectScene];
   const Scene = $derived(sceneComponents[buttPanelState.selectedScene]);
   const currentSceneState = $derived(buttPanelState.currentSceneState);
   const debug = $derived(buttPanelState.debug);

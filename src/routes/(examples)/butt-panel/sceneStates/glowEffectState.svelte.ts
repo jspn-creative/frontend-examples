@@ -1,33 +1,30 @@
 export class GlowEffectState {
   resetToDefaults() {
-    this.speed = 0.3;
-    this.flareIntensity1 = 5.0;
-    this.flareIntensity2 = 5.0;
-    this.flareIntensity3 = 5.0;
-    this.flareIntensity4 = 5.0;
-    this.flareColor = "#0ad2d2";
-    this.tubeRadius = 10;
+    this.noiseSpeed = 0.9;
+    this.highlightSpeed = 0.9;
+    this.colorShiftSpeed = 0.9;
+    this.highlightIntensity = 5.0;
+    this.highlightColor = "#0ad2d2";
+    this.tubeRadius = 3;
     this.color = "#009cff";
   }
 
-  speed = $state(0);
-  flareIntensity1 = $state(0);
-  flareIntensity2 = $state(0);
-  flareIntensity3 = $state(0);
-  flareIntensity4 = $state(0);
-  flareColor = $state("#ffd700");
+  noiseSpeed = $state(0);
+  highlightSpeed = $state(0);
+  colorShiftSpeed = $state(0);
+  highlightIntensity = $state(0);
+  highlightColor = $state("#ffd700");
 
   tubeRadius = $state(0);
   color = $state("#ffd700");
 
   getShaderUniforms() {
     return {
-      speed: this.speed,
-      flareIntensity1: this.flareIntensity1,
-      flareIntensity2: this.flareIntensity2,
-      flareIntensity3: this.flareIntensity3,
-      flareIntensity4: this.flareIntensity4,
-      flareColor: this.flareColor,
+      noiseAnimSpeed: this.noiseSpeed,
+      highlightSpeed: this.highlightSpeed,
+      colorShiftSpeed: this.colorShiftSpeed,
+      highlightIntensity: this.highlightIntensity,
+      highlightColor: this.highlightColor,
     };
   }
 
@@ -43,23 +40,17 @@ export class GlowEffectState {
     return {
       folders: [
         {
-          title: "Flare Controls",
+          title: "Animation Controls",
           expanded: true,
           controls: [
-            { type: "slider", key: "speed", label: "Speed", min: 0, max: 2, step: 0.01 },
-            { type: "color", key: "flareColor", label: "Flare Color" },
+            { type: "slider", key: "noiseSpeed", label: "Noise Speed", min: 0, max: 10, step: 0.1 },
+            { type: "slider", key: "highlightSpeed", label: "Highlight Speed", min: 0, max: 10, step: 0.1 },
+            { type: "slider", key: "colorShiftSpeed", label: "Color Shift Speed", min: 0, max: 10, step: 0.1 },
+            { type: "color", key: "highlightColor", label: "Highlight Color" },
+            { type: "slider", key: "highlightIntensity", label: "Highlight Intensity", min: 0, max: 10, step: 0.1 },
           ],
         },
-        {
-          title: "Flare Intensities",
-          expanded: false,
-          controls: [
-            { type: "slider", key: "flareIntensity1", label: "Intensity 1", min: 0, max: 5, step: 0.1 },
-            { type: "slider", key: "flareIntensity2", label: "Intensity 2", min: 0, max: 5, step: 0.1 },
-            { type: "slider", key: "flareIntensity3", label: "Intensity 3", min: 0, max: 5, step: 0.1 },
-            { type: "slider", key: "flareIntensity4", label: "Intensity 4", min: 0, max: 5, step: 0.1 },
-          ],
-        },
+
         {
           title: "Tube",
           expanded: true,

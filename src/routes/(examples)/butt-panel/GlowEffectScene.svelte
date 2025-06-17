@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { T, useTask, useThrelte } from "@threlte/core";
+  import { T, useTask } from "@threlte/core";
   import { OrbitControls } from "@threlte/extras";
   import { Color, Vector2, Vector3, Curve, AdditiveBlending, Clock } from "three";
   import { buttPanelState } from "./buttPanelState.svelte";
@@ -15,21 +15,21 @@
   const debug = $derived(buttPanelState.debug);
 
   const currentSceneState = $derived(buttPanelState.currentSceneState as GlowEffectState);
+
   const tubeRadius = $derived(currentSceneState.tubeRadius);
   const glowColor = $derived(new Color(currentSceneState.color));
-  const flareColor = $derived(new Color(currentSceneState.flareColor));
+  const highlightColor = $derived(new Color(currentSceneState.highlightColor));
 
   const planeSize = $derived([innerWidth.current, innerHeight.current]);
 
   const uniforms = {
     uTime: { value: 0 },
     uResolution: { value: new Vector2() },
-    uSpeed: { value: 0 },
-    uFlareIntensity1: { value: 0 },
-    uFlareIntensity2: { value: 0 },
-    uFlareIntensity3: { value: 0 },
-    uFlareIntensity4: { value: 0 },
-    uFlareColor: { value: new Color() },
+    uNoiseSpeed: { value: 0 },
+    uHighlightSpeed: { value: 0 },
+    uColorShiftSpeed: { value: 0 },
+    uHighlightIntensity: { value: 0 },
+    uHighlightColor: { value: new Color() },
     uAspectRatio: { value: 1.0 },
     uBorderRect: { value: new Vector2() },
     uCornerRadius: { value: 45.0 },
@@ -46,96 +46,129 @@
   const fragmentShader = `
     uniform float uTime;
     uniform vec2 uResolution;
-    uniform float uSpeed;
-    uniform float uFlareIntensity1;
-    uniform float uFlareIntensity2;
-    uniform float uFlareIntensity3;
-    uniform float uFlareIntensity4;
-    uniform vec3 uFlareColor;
+    uniform float uNoiseSpeed;
+    uniform float uHighlightSpeed;
+    uniform float uColorShiftSpeed;
+    uniform float uHighlightIntensity;
+    uniform vec3 uHighlightColor;
     varying vec2 vUv;
-    
-    // Aspect ratio correction
-    uniform float uAspectRatio;
-
-    // Rounded rectangle settings
-    uniform vec2 uBorderRect;
-    uniform float uCornerRadius;
 
     #define PI 3.14159265359
-    #define TWO_PI 6.28318530718
+    #define BOX_SIZE        vec2(0.4, 0.9) // Half-width, half-height
+    #define CORNER_RADIUS   0.4            // How round the corners are (0.0 for sharp)
 
-    float random(in vec2 _st) { 
-      return fract(sin(dot(_st.xy, vec2(12.9898, 78.233))) * 43758.54531237);
+    #define COLOR_1         vec3(0.61, 0.26, 0.99) // Purple
+    #define COLOR_2         vec3(0.29, 0.76, 0.91) // Teal
+    #define COLOR_3         vec3(0.06, 0.07, 0.60) // Dark Blue (core color)
+    #define BG_COLOR        vec3(0.0)
+
+    #define GLOW_FALLOFF         0.4  // Makes the border softer. Higher value = softer/wider glow.
+    #define NOISE_SCALE          1.0  // Zoom level of the border texture
+    #define NOISE_INTENSITY      0.7  // How much the noise affects the glow brightness (0.0 to 1.0)
+    #define HIGHLIGHT_FALLOFF    5.0  // How sharp the orbiting highlight is
+
+    // noise
+    vec3 hash33(vec3 p3)
+    {
+      p3 = fract(p3 * vec3(.1031,.11369,.13787));
+      p3 += dot(p3, p3.yxz+19.19);
+      return -1.0 + 2.0 * fract(vec3(p3.x+p3.y, p3.x+p3.z, p3.y+p3.z)*p3.zyx);
     }
 
-    float noise(in vec2 _st) {
-      vec2 i = floor(_st);
-      vec2 f = fract(_st);
-      float a = random(i);
-      float b = random(i + vec2(1.0, 0.0));
-      float c = random(i + vec2(0.0, 1.0));
-      float d = random(i + vec2(1.0, 1.0));
-      vec2 u = f * f * (3.0 - 2.0 * f);
-      return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+    float snoise3(vec3 p)
+    {
+      const float K1 = 0.333333333;
+      const float K2 = 0.166666667;
+      vec3 i = floor(p + (p.x + p.y + p.z) * K1);
+      vec3 d0 = p - (i - (i.x + i.y + i.z) * K2);
+      vec3 e = step(vec3(0.0), d0 - d0.yzx);
+      vec3 i1 = e * (1.0 - e.zxy);
+      vec3 i2 = 1.0 - e.zxy * (1.0 - e);
+      vec3 d1 = d0 - (i1 - K2);
+      vec3 d2 = d0 - (i2 - K1);
+      vec3 d3 = d0 - 0.5;
+      vec4 h = max(0.6 - vec4(dot(d0, d0), dot(d1, d1), dot(d2, d2), dot(d3, d3)), 0.0);
+      vec4 n = h * h * h * h * vec4(dot(d0, hash33(i)), dot(d1, hash33(i + i1)), dot(d2, hash33(i + i2)), dot(d3, hash33(i + 1.0)));
+      return dot(vec4(31.316), n);
     }
 
-    vec4 flare(vec2 uv, float seed, float dir, float intensity) {
-      // Convert UV to screen coordinates (-1 to 1)
-      vec2 screenUv = (uv - 0.5) * 2.0;
-      screenUv.x *= uAspectRatio;
-      
-      // Distance from center
-      float distFromCenter = length(screenUv);
-      
-      // Calculate distance from screen edges
-      vec2 absUv = abs(screenUv);
-      float distFromEdge = 1.0 - max(absUv.x, absUv.y);
-      
-      // Direction from screen edge to center
-      vec2 dirToCenter = normalize(-screenUv);
-      float angle = atan(dirToCenter.y, dirToCenter.x);
-      
-      float t = uTime * uSpeed * dir;
-      float amnt = 0.6 + sin(seed) * 8.0;
-      
-      // Create flare pattern along the direction from edge to center
-      float flarePos = distFromCenter * 2.0; // Position along the flare ray
-      
-      float n = noise(vec2(seed + angle * amnt + t * 0.1, seed + t + flarePos));
-      n *= pow(noise(vec2(seed * 194.0 + angle * amnt + t, seed + t + flarePos) + distFromCenter), 2.0);
-      n *= pow(noise(vec2(seed * 134.0 + angle * amnt + t, seed + t + flarePos) + distFromCenter), 3.0);
-      n *= pow(noise(vec2(seed * 123.0 + angle * amnt + t, seed + t + flarePos) + distFromCenter), 4.0);
-      
-      // Fade based on distance from edge (strongest at edges)
-      float edgeFade = pow(distFromEdge, 0.5);
-      
-      // Fade based on distance from center (fade out towards center)
-      float centerFade = 1.0 - pow(distFromCenter / 1.4142, 2.0); // 1.4142 is sqrt(2)
-      
-      n *= edgeFade * centerFade;
-      n *= intensity;
-      
-      return vec4(pow(n * 2.1, 2.0), n, n, n);
-    }
-
-    float sdRoundedBox( in vec2 p, in vec2 b, in float r ) {
+    // Signed Distance Function for a Rounded Rectangle
+    float sdRoundedBox( in vec2 p, in vec2 b, in float r )
+    {
       vec2 q = abs(p)-b+r;
-      return min(max(q.x,q.y),0.0) + length(max(q,0.0)) - r;
+      return length(max(q,0.0)) + min(max(q.x,q.y),0.0) - r;
+    }
+
+    vec4 extractAlpha(vec3 colorIn)
+    {
+      vec4 colorOut;
+      float maxValue = min(max(max(colorIn.r, colorIn.g), colorIn.b), 1.0);
+      if (maxValue > 1e-5) {
+        colorOut.rgb = colorIn.rgb * (1.0 / maxValue);
+        colorOut.a = maxValue;
+      } else {
+        colorOut = vec4(0.0);
+      }
+      return colorOut;
+    }
+
+    float light1(float intensity, float attenuation, float dist)
+    {
+      return intensity / (1.0 + dist * attenuation);
+    }
+
+    float light2(float intensity, float attenuation, float dist)
+    {
+      return intensity / (1.0 + dist * dist * attenuation);
+    }
+
+    void draw( out vec4 _FragColor, in vec2 vUv )
+    {
+      vec2 uv = vUv;
+      
+      // Calculate the distance to the surface of the rounded rectangle.
+      // This value is 0 on the line, negative inside, and positive outside.
+      float sdfDist = sdRoundedBox(uv, BOX_SIZE, CORNER_RADIUS);
+      
+      // The glow is brightest at the line (sdfDist=0) and fades to zero at GLOW_FALLOFF distance.
+      float glow = smoothstep(GLOW_FALLOFF, 0.0, abs(sdfDist));
+      
+      // Modulates the brightness of the glow with noise.
+      float n0 = snoise3(vec3(uv * NOISE_SCALE, uTime * uNoiseSpeed)) * 0.5 + 0.5;
+      glow *= mix(1.0 - NOISE_INTENSITY, 1.0, n0); // Mix between a dimmer and full brightness
+      
+      // Use sin() for a smooth color transition along the y-axis.
+      float y_norm = uv.y / BOX_SIZE.y; // -1 at bottom, 1 at top
+      float phase = y_norm * PI * 0.5;  // Map to a quarter sine-wave cycle
+      float cl = sin(phase + uTime * uColorShiftSpeed) * 0.5 + 0.5;
+      
+      // Highlight
+      float a = uTime * uHighlightSpeed;
+      vec2 pos = vec2(cos(a) * BOX_SIZE.x, sin(a) * BOX_SIZE.y);
+      float d = distance(uv, pos);
+      float v1 = light2(uHighlightIntensity, HIGHLIGHT_FALLOFF, d);
+      
+      // Combine everything using the new unified 'glow' value.
+      vec3 baseColor = mix(COLOR_1, COLOR_2, cl);
+      vec3 col = mix(COLOR_3, baseColor, glow); // The dark core is revealed by the glow
+      col += v1 * glow * uHighlightColor; // Add the colored highlight, masked by the glow
+      
+      col.rgb = clamp(col.rgb, 0.0, 1.0);
+      
+      // Multiply by the final glow value to handle transparency.
+      _FragColor = extractAlpha(col * glow);
     }
 
     void main() {
-      vec2 uv = vUv;
+      vec2 uv = (vUv * 2.0 - 1.0) * vec2(uResolution.x / uResolution.y, 1.0);
       
-      vec4 c = vec4(0.0);
-      c += flare(uv, 74.621, 1.0, uFlareIntensity1);
-      c += flare(uv, 35.1412, -1.0, uFlareIntensity2);
-      c += flare(uv, 21.5637, 1.0, uFlareIntensity3);
-      c += flare(uv, 1.2637, -1.0, uFlareIntensity4);
-      
-      c.rgb *= uFlareColor;
-      c.xyz = clamp(c.xyz, 0.0, 1.0);
-      
-      gl_FragColor = c;
+      vec4 col;
+      draw(col, uv);
+
+      vec3 bg = BG_COLOR;
+
+      gl_FragColor.rgb = mix(bg, col.rgb, col.a); //normal blend
+      gl_FragColor.a = col.a;
     }
   `;
 
@@ -211,12 +244,11 @@
   // Update uniforms
   $effect(() => {
     const state = currentSceneState;
-    uniforms.uSpeed.value = state.speed;
-    uniforms.uFlareIntensity1.value = state.flareIntensity1;
-    uniforms.uFlareIntensity2.value = state.flareIntensity2;
-    uniforms.uFlareIntensity3.value = state.flareIntensity3;
-    uniforms.uFlareIntensity4.value = state.flareIntensity4;
-    uniforms.uFlareColor.value.set(state.flareColor);
+    uniforms.uNoiseSpeed.value = state.noiseSpeed;
+    uniforms.uHighlightSpeed.value = state.highlightSpeed;
+    uniforms.uColorShiftSpeed.value = state.colorShiftSpeed;
+    uniforms.uHighlightIntensity.value = state.highlightIntensity;
+    uniforms.uHighlightColor.value.set(state.highlightColor);
   });
 
   // Update resolution and aspect ratio

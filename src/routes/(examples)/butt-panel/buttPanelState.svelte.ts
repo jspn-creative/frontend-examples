@@ -1,11 +1,14 @@
-import { ParticleTubeState, GlowEffectState, FireEffectState, GlitchEffectState } from "./sceneStates";
+import { ParticleTubeState, GlowEffectState, FireEffectState, GlitchEffectState, RainbowEffectState } from "./sceneStates";
 import type { ListOptions } from "svelte-tweakpane-ui";
+
+const defaultScene = 4;
 
 export const sceneOptions: ListOptions<number> = {
   "Particle Tube": 0,
   "Glow Effect": 1,
   "Fire Effect": 2,
   "Glitch Effect": 3,
+  "Rainbow Effect": 4,
 };
 
 export const textureOptions: ListOptions<number> = {
@@ -28,11 +31,12 @@ const sceneStateFactories = {
   1: () => new GlowEffectState(),
   2: () => new FireEffectState(),
   3: () => new GlitchEffectState(),
+  4: () => new RainbowEffectState(),
 } as const;
 
 export class ButtPanelState {
   resetToDefaults() {
-    this.selectedScene = 2;
+    this.selectedScene = defaultScene;
     this.isActive = true;
     this.isTextured = true;
     this.showTest = false;
@@ -43,7 +47,7 @@ export class ButtPanelState {
     this._currentSceneState.resetToDefaults();
   }
 
-  selectedScene = $state(2);
+  selectedScene = $state(defaultScene);
   isActive = $state(true);
   isTextured = $state(true);
   showTest = $state(false);
