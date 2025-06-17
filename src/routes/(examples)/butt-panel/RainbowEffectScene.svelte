@@ -109,6 +109,19 @@
     currentSceneState.updateFromPreset();
   });
 
+  // React to overlay changes
+  $effect(() => {
+    if (buttPanelState.hasOverlay) {
+      if (buttPanelState.overlay === 0) {
+        currentSceneState.colorPreset = "red";
+        currentSceneState.updateFromPreset();
+      } else if (buttPanelState.overlay === 1) {
+        currentSceneState.colorPreset = "blue";
+        currentSceneState.updateFromPreset();
+      }
+    }
+  });
+
   $effect(() => {
     if (innerWidth.current && innerHeight.current) {
       uniforms.uResolution.value.set(innerWidth.current, innerHeight.current);

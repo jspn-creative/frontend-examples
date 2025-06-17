@@ -1,4 +1,5 @@
-import type { ListOptionsObjectArray, ListOptions, ListOptionsArray, ListOptionsRecord } from "svelte-tweakpane-ui";
+import type { ListOptionsObjectArray } from "svelte-tweakpane-ui";
+import { buttPanelState } from "../buttPanelState.svelte";
 
 export type ColorPreset = "rainbow" | "red" | "blue" | "green" | "purple" | "orange" | "cyan";
 
