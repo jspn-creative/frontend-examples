@@ -166,6 +166,7 @@ export class InnerGlowEffectState {
               type: "radiogrid",
               key: "colorPreset",
               label: "Color Preset",
+              columns: 2,
               values: Object.keys(colorPresets) as ColorPreset[],
             },
           ],

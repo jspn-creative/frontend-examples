@@ -103,8 +103,8 @@
             <List bind:value={state[control.key]} label={control.label} options={listControl.options} />
           {:else if control.type === "radiogrid"}
             {@const state = currentSceneState as unknown as Record<string, string>}
-            {@const radioGridControl = control as typeof control & { values: string[] }}
-            <RadioGrid bind:value={state[control.key]} label={control.label} values={radioGridControl.values} />
+            {@const radioGridControl = control as typeof control & { values: string[]; columns: number }}
+            <RadioGrid bind:value={state[control.key]} label={control.label} values={radioGridControl.values} columns={radioGridControl.columns} />
           {/if}
         {/each}
       </Folder>
