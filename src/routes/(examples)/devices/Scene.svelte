@@ -2,14 +2,14 @@
   import { T, useThrelte } from "@threlte/core";
   import { ContactShadows, OrbitControls, Suspense, interactivity, useCursor } from "@threlte/extras";
   import Devices from "./Devices.svelte";
-  import { getDeviceSceneState } from "./deviceSceneState.svelte";
+  import { deviceSceneState } from "./deviceSceneState.svelte";
 
   interactivity();
 
   const { onPointerEnter, onPointerLeave } = useCursor();
   const { invalidate } = useThrelte();
 
-  const deviceState = getDeviceSceneState();
+  const deviceState = $derived(deviceSceneState);
 
   // Component reference to access exported actions
   let devicesComponent: any = $state();

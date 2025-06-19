@@ -2,21 +2,32 @@
   import { Canvas } from "@threlte/core";
   import { Button, Checkbox, Pane, Folder, Slider, Color as TweakpaneColor, List, Point, Separator, Element } from "svelte-tweakpane-ui";
   import Scene from "./Scene.svelte";
-  import { setDeviceSceneState } from "./deviceSceneState.svelte";
-  const deviceState = setDeviceSceneState();
+  import { deviceSceneState } from "./deviceSceneState.svelte";
+  const deviceState = deviceSceneState;
+  const useStudio = false;
+
+  deviceState.initializeEffects();
 </script>
 
+{#snippet createCanvas(useStudio: boolean)}
+  <Canvas>
+    {#if useStudio}
+      {#await import("@threlte/studio") then { Studio }}
+        <Studio>
+          <Scene />
+        </Studio>
+      {/await}
+    {:else}
+      <Scene />
+    {/if}
+  </Canvas>
+{/snippet}
+
 <div class="relative size-full">
-  {#await import("@threlte/studio") then { Studio }}
-    <Canvas>
-      <Studio>
-        <Scene />
-      </Studio>
-    </Canvas>
-  {/await}
+  {@render createCanvas(useStudio)}
 
   <div class="absolute top-4 right-4 w-80 z-10">
-    <Pane title="Device Scene Controls" expanded={true} padding="75px 7px">
+    <Pane title="Device Scene Controls" expanded={false} padding="75px 7px">
       <!-- Quick Actions -->
       <Folder title="Quick Actions" expanded={true}>
         <Button title="Reset Camera" on:click={deviceState.resetCamera} />
