@@ -39,7 +39,7 @@ const sceneStateFactories = {
 export class ButtPanelState {
   resetToDefaults() {
     this.selectedScene = defaultScene;
-    this.isActive = true;
+    this.isActive = false;
     this.isTextured = true;
     this.showTest = false;
     this.debug = false;
@@ -70,7 +70,7 @@ export class ButtPanelState {
     }
   });
 
-  borderRect = $state({ x: 0, y: 0, width: 0, height: 0 });
+  borderRect = $state({ x: 0, y: 0, width: 0, height: 0, innerWidth: 0, innerHeight: 0 });
 
   get currentSceneState() {
     return this._currentSceneState;
@@ -85,7 +85,7 @@ export class ButtPanelState {
     this.isActive = !this.isActive;
   };
 
-  updateBorderRect(rect: { x: number; y: number; width: number; height: number }) {
+  updateBorderRect(rect: { x: number; y: number; width: number; height: number; innerWidth: number; innerHeight: number }) {
     this.borderRect = rect;
   }
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Canvas } from "@threlte/core";
-
+  import { Grid } from "@threlte/extras";
   import SVGPanel from "./butt-panel.svelte";
   import ParticleTubeScene from "./ParticleTubeScene.svelte";
   import GlowEffectScene from "./GlowEffectScene.svelte";
@@ -11,9 +11,8 @@
   import { innerWidth, innerHeight } from "svelte/reactivity/window";
   import { ThemeUtils, IntervalSlider, Pane, Checkbox, List, TabGroup, TabPage, Folder, Slider, Button, Separator, Color, RadioGrid } from "svelte-tweakpane-ui";
 
-  // ThemeUtils.setGlobalDefaultTheme(ThemeUtils.presets.translucent);
   import { buttPanelState, sceneOptions, textureOptions, overlayOptions } from "./buttPanelState.svelte";
-  import { WebGLRenderer } from "three";
+  import { onMount } from "svelte";
 
   const sceneComponents = [ParticleTubeScene, GlowEffectScene, FireEffectScene, GlitchEffectScene, RainbowEffectScene, InnerGlowEffectScene];
   const Scene = $derived(sceneComponents[buttPanelState.selectedScene]);
@@ -25,6 +24,10 @@
 
   let borderElement: HTMLDivElement;
 
+  onMount(() => {
+    ThemeUtils.setGlobalDefaultTheme(ThemeUtils.presets.translucent);
+  });
+
   $effect(() => {
     const updateBorderRect = () => {
       if (borderElement && innerWidth.current && innerHeight.current) {
@@ -34,6 +37,8 @@
           y: rect.top,
           width: rect.width,
           height: rect.height,
+          innerWidth: innerWidth.current,
+          innerHeight: innerHeight.current,
         });
       }
     };
@@ -55,10 +60,125 @@
   }
 
   const uiConfig = $derived(currentSceneState.getUIConfig());
+
+  // Security System State Management
+  class SecuritySystem {
+    keyStatus = $state<"disconnected" | "connecting" | "connected">("disconnected");
+    protocolStatus = $state<"inactive" | "active">("inactive");
+    connectionProgress = $state(0); // Progress from 0 to 100
+
+    // Derived button texts and states using getters
+    get keyButtonText() {
+      if (this.keyStatus === "connecting") return "Connecting...";
+      if (this.keyStatus === "connected") return "Disconnect Security Key";
+      return "Connect Security Key";
+    }
+
+    get protocolButtonText() {
+      if (this.protocolStatus === "active") return "Disable Security Protocol";
+      return "Initiate Security Protocol";
+    }
+
+    get keyButtonDisabled() {
+      return this.keyStatus === "connecting";
+    }
+
+    get keyStatusText() {
+      if (this.keyStatus === "connected") return "Connected";
+      if (this.keyStatus === "connecting") return "Connecting...";
+      return "Disconnected";
+    }
+
+    get keyStatusColor() {
+      if (this.keyStatus === "connected") return "text-green-400";
+      if (this.keyStatus === "connecting") return "text-yellow-400";
+      return "text-orange-400";
+    }
+
+    get protocolStatusText() {
+      return this.protocolStatus === "active" ? "Active" : "Inactive";
+    }
+
+    get protocolStatusColor() {
+      return this.protocolStatus === "active" ? "text-green-400" : "text-red-400";
+    }
+
+    get statusLightColors() {
+      // First light reflects key status
+      let firstLight = "bg-orange-500"; // disconnected
+      if (this.keyStatus === "connecting") {
+        firstLight = "bg-yellow-500";
+      } else if (this.keyStatus === "connected") {
+        firstLight = "bg-green-500";
+      }
+
+      // Second light reflects protocol status
+      const secondLight = this.protocolStatus === "active" ? "bg-green-500" : "bg-red-500";
+
+      return [firstLight, secondLight];
+    }
+
+    get protocolButtonDisabled() {
+      return false;
+    }
+
+    // Methods
+    async connectKey() {
+      if (this.keyStatus === "connected") {
+        this.keyStatus = "disconnected";
+        this.protocolStatus = "inactive";
+        this.connectionProgress = 0; // Reset progress
+        buttPanelState.hasOverlay = false;
+        buttPanelState.isActive = false;
+        return;
+      }
+
+      this.keyStatus = "connecting";
+      this.connectionProgress = 0;
+      buttPanelState.isActive = true;
+
+      // Animate progress over 5 seconds
+      const duration = 5000; // 5 seconds
+      const startTime = Date.now();
+
+      const updateProgress = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min((elapsed / duration) * 100, 100);
+        this.connectionProgress = progress;
+
+        if (progress < 100) {
+          requestAnimationFrame(updateProgress);
+        }
+      };
+
+      requestAnimationFrame(updateProgress);
+
+      // 5-second connection simulation
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
+      this.keyStatus = "connected";
+      buttPanelState.overlay = 1;
+      buttPanelState.hasOverlay = true;
+    }
+
+    toggleProtocol() {
+      this.protocolStatus = this.protocolStatus === "active" ? "inactive" : "active";
+
+      this.protocolStatus === "active" ? (buttPanelState.overlay = 0) : (buttPanelState.overlay = 1);
+    }
+  }
+
+  const securitySystem = new SecuritySystem();
+
+  // Combined toggle function for SVGPanel button
+  function combinedToggle() {
+    buttPanelState.toggleGlow();
+    securitySystem.toggleProtocol();
+  }
 </script>
 
 <!-- Tweakpane UI -->
-<Pane position="draggable" title="Effect Config" expanded x={(innerWidth.current ?? 1200) - 350} padding="75px 7px">
+<Pane position="draggable" title="Effect Config" expanded={(innerWidth.current ?? 0) > 800} x={innerWidth.current ?? 1200} padding="5rem 40px" width={370} theme={ThemeUtils.presets.translucent}>
   <!-- Global Controls -->
   <Checkbox bind:value={buttPanelState.isTextured} label="Textured" />
   {#if buttPanelState.isTextured}
@@ -81,7 +201,7 @@
 
   <Separator />
 
-  <Folder title="{Object.keys(sceneOptions)[buttPanelState.selectedScene]} — Scene Settings" expanded={true}>
+  <Folder title="{Object.keys(sceneOptions)[buttPanelState.selectedScene]} — Scene Settings" expanded={false}>
     {#each uiConfig.folders as folder}
       <Folder title={folder.title} expanded={folder.expanded}>
         {#each folder.controls as control}
@@ -117,8 +237,12 @@
 </Pane>
 
 <div class="bg-[#0E0F0D] min-h-screen flex flex-col gap-6 items-center justify-center">
+  {@render gridOverlay()}
+  {@render dataPanel()}
+  {@render controlPanel()}
+
   <div class="relative max-w-full h-[80vh] aspect-[9/16]]">
-    <SVGPanel toggleGlow={buttPanelState.toggleGlow} isGlowing={buttPanelState.isActive} isTextured={buttPanelState.isTextured} texture={buttPanelState.texture} {glowColor} {overlay} {hasOverlay} />
+    <SVGPanel toggleGlow={combinedToggle} isGlowing={buttPanelState.isActive} isTextured={buttPanelState.isTextured} texture={buttPanelState.texture} {glowColor} {overlay} {hasOverlay} />
     <div class="@container bg-[#000] border-4 border-[#090B09] absolute top-[3%] inset-x-[15%] h-6 pointer-events-none">
       <div class="relative">
         <!-- User Avatar: -->
@@ -161,9 +285,10 @@
     <div class="absolute -inset-10 {debug ? '' : 'pointer-events-none'}">
       <!-- <Canvas renderMode="always" createRenderer={() => new WebGLRenderer({ powerPreference: "high-performance", antialias: false, stencil: false, depth: false })}> -->
       <Canvas renderMode="always">
-        {#if import.meta.env.MODE === "development"}
+        {#if import.meta.env.MODE === "developmentaaa"}
           {#await import("@threlte/studio") then { Studio }}
             <Studio>
+              <Grid position={[0, -0.2, 0]} infiniteGrid backgroundColor={"#161815"} backgroundOpacity={1} cellColor={"#242623"} sectionColor={"#242623"} />
               <Scene />
             </Studio>
           {/await}
@@ -174,3 +299,88 @@
     </div>
   </div>
 </div>
+
+{#snippet dataPanel()}
+  <div class="fixed bottom-20 left-10 w-72 bg-black/10 border border-gray-100/30 rounded z-20 pointer-events-auto">
+    <div class="p-4">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-gray-100 text-sm font-mono uppercase tracking-wider">System Metrics</span>
+        <div class="w-2 h-2 bg-gray-100 rounded-full animate-pulse"></div>
+      </div>
+
+      <!-- Data Readouts -->
+      <div class="space-y-2 text-xs font-mono uppercase">
+        <div class="flex justify-between">
+          <span class="text-gray-400">Render Mode:</span>
+          <span class="text-white">WebGL</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Viewport Size:</span>
+          <span class="text-white">{Math.round(buttPanelState.borderRect.innerWidth)}×{Math.round(buttPanelState.borderRect.innerHeight)}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Device Size:</span>
+          <span class="text-white">{Math.round(buttPanelState.borderRect.width)}×{Math.round(buttPanelState.borderRect.height)}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Effect Name:</span>
+          <span class="text-white">{Object.keys(sceneOptions)[buttPanelState.selectedScene]}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Effect Status:</span>
+          <span class={buttPanelState.isActive ? "text-green-400" : "text-yellow-400"}>{buttPanelState.isActive ? "ACTIVE" : "STANDBY"}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Overlay Status:</span>
+          <span class={buttPanelState.hasOverlay ? "text-green-400" : "text-red-400"}>{buttPanelState.hasOverlay ? "ENABLED" : "DISABLED"}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+{/snippet}
+
+{#snippet controlPanel()}
+  <div class="fixed bottom-20 right-10 w-72 bg-black/10 border border-gray-100/30 rounded z-20 pointer-events-auto">
+    <div class="p-4">
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-gray-100 text-sm font-mono uppercase tracking-wider">Security Controls</span>
+        <div class="flex space-x-1">
+          <div class="w-1.5 h-1.5 {securitySystem.statusLightColors[0]} rounded-full animate-pulse"></div>
+          <div class="w-1.5 h-1.5 {securitySystem.statusLightColors[1]} rounded-full animate-pulse" style="animation-delay: 0.5s;"></div>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="h-1.5 bg-white/10 rounded-full mb-4">
+        <div class="h-full bg-gray-100 rounded-full animate-pulse" style="width: {securitySystem.connectionProgress}%;"></div>
+      </div>
+
+      <!-- Control Buttons -->
+      <div class="space-y-3">
+        <button class="w-full px-4 py-3 bg-white/5 border border-gray-100/20 rounded text-gray-100 font-mono text-xs uppercase tracking-wide transition-all duration-200 active:scale-[0.98] {securitySystem.keyButtonDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 hover:border-gray-100/40'}" onclick={() => securitySystem.connectKey()} disabled={securitySystem.keyButtonDisabled}>
+          {securitySystem.keyButtonText}
+        </button>
+
+        <button class="w-full px-4 py-3 bg-white/5 border border-gray-100/20 rounded text-gray-100 font-mono text-xs uppercase tracking-wide transition-all duration-200 active:scale-[0.98] {securitySystem.protocolButtonDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 hover:border-gray-100/40'}" onclick={() => securitySystem.toggleProtocol()} disabled={securitySystem.protocolButtonDisabled}>
+          {securitySystem.protocolButtonText}
+        </button>
+
+        <!-- Status indicators -->
+        <div class="pt-2 border-t border-gray-100/10">
+          <div class="flex justify-between text-xs font-mono uppercase">
+            <span class="text-gray-400">Key Status:</span>
+            <span class={securitySystem.keyStatusColor}>{securitySystem.keyStatusText}</span>
+          </div>
+          <div class="flex justify-between text-xs font-mono uppercase mt-1">
+            <span class="text-gray-400">Protocol:</span>
+            <span class={securitySystem.protocolStatusColor}>{securitySystem.protocolStatusText}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{/snippet}
+
+{#snippet gridOverlay()}
+  <div class="fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[length:40px_40px]"></div>
+{/snippet}
