@@ -61,13 +61,11 @@
 
   const uiConfig = $derived(currentSceneState.getUIConfig());
 
-  // Security System State Management
   class SecuritySystem {
     keyStatus = $state<"disconnected" | "connecting" | "connected">("disconnected");
     protocolStatus = $state<"inactive" | "active">("inactive");
-    connectionProgress = $state(0); // Progress from 0 to 100
+    connectionProgress = $state(0);
 
-    // Derived button texts and states using getters
     get keyButtonText() {
       if (this.keyStatus === "connecting") return "Connecting...";
       if (this.keyStatus === "connected") return "Disconnect Security Key";
@@ -91,8 +89,8 @@
 
     get keyStatusColor() {
       if (this.keyStatus === "connected") return "text-green-400";
-      if (this.keyStatus === "connecting") return "text-yellow-400";
-      return "text-orange-400";
+      if (this.keyStatus === "connecting") return "text-blue-400";
+      return "text-yellow-400";
     }
 
     get protocolStatusText() {
@@ -104,15 +102,13 @@
     }
 
     get statusLightColors() {
-      // First light reflects key status
-      let firstLight = "bg-orange-500"; // disconnected
+      let firstLight = "bg-yellow-500";
       if (this.keyStatus === "connecting") {
-        firstLight = "bg-yellow-500";
+        firstLight = "bg-blue-500";
       } else if (this.keyStatus === "connected") {
         firstLight = "bg-green-500";
       }
 
-      // Second light reflects protocol status
       const secondLight = this.protocolStatus === "active" ? "bg-green-500" : "bg-red-500";
 
       return [firstLight, secondLight];
@@ -122,12 +118,11 @@
       return false;
     }
 
-    // Methods
     async connectKey() {
       if (this.keyStatus === "connected") {
         this.keyStatus = "disconnected";
         this.protocolStatus = "inactive";
-        this.connectionProgress = 0; // Reset progress
+        this.connectionProgress = 0;
         buttPanelState.hasOverlay = false;
         buttPanelState.isActive = false;
         return;
@@ -137,8 +132,7 @@
       this.connectionProgress = 0;
       buttPanelState.isActive = true;
 
-      // Animate progress over 5 seconds
-      const duration = 5000; // 5 seconds
+      const duration = 2000;
       const startTime = Date.now();
 
       const updateProgress = () => {
@@ -153,8 +147,7 @@
 
       requestAnimationFrame(updateProgress);
 
-      // 5-second connection simulation
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, duration));
 
       this.keyStatus = "connected";
       buttPanelState.overlay = 1;
@@ -304,35 +297,38 @@
   <div class="fixed bottom-20 left-10 w-72 bg-black/10 border border-gray-100/30 rounded z-20 pointer-events-auto">
     <div class="p-4">
       <div class="flex items-center justify-between mb-3">
-        <span class="text-gray-100 text-sm font-mono uppercase tracking-wider">System Metrics</span>
-        <div class="w-2 h-2 bg-gray-100 rounded-full animate-pulse"></div>
+        <span class="text-neutral-100 text-sm font-mono uppercase tracking-wider">System Metrics</span>
+        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
       </div>
 
       <!-- Data Readouts -->
       <div class="space-y-2 text-xs font-mono uppercase">
         <div class="flex justify-between">
-          <span class="text-gray-400">Render Mode:</span>
+          <span class="text-neutral-400">Render Mode:</span>
           <span class="text-white">WebGL</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-gray-400">Viewport Size:</span>
+          <span class="text-neutral-400">Viewport Size:</span>
           <span class="text-white">{Math.round(buttPanelState.borderRect.innerWidth)}×{Math.round(buttPanelState.borderRect.innerHeight)}</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-gray-400">Device Size:</span>
+          <span class="text-neutral-400">Render Target:</span>
           <span class="text-white">{Math.round(buttPanelState.borderRect.width)}×{Math.round(buttPanelState.borderRect.height)}</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-gray-400">Effect Name:</span>
-          <span class="text-white">{Object.keys(sceneOptions)[buttPanelState.selectedScene]}</span>
+          <span class="text-neutral-400">Effect Name:</span>
+          <div class="flex gap-2">
+            <span class="text-white">{Object.keys(sceneOptions)[buttPanelState.selectedScene]}</span>
+            <span class="px-1.5 py-0.5 bg-white/10 text-white text-[10px] font-mono rounded">#{buttPanelState.selectedScene + 1}</span>
+          </div>
         </div>
         <div class="flex justify-between">
-          <span class="text-gray-400">Effect Status:</span>
-          <span class={buttPanelState.isActive ? "text-green-400" : "text-yellow-400"}>{buttPanelState.isActive ? "ACTIVE" : "STANDBY"}</span>
+          <span class="text-neutral-400">Effect Status:</span>
+          <span class="{buttPanelState.isActive ? 'text-green-400' : 'text-yellow-400'} uppercase">{buttPanelState.isActive ? "Active" : "Standby"}</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-gray-400">Overlay Status:</span>
-          <span class={buttPanelState.hasOverlay ? "text-green-400" : "text-red-400"}>{buttPanelState.hasOverlay ? "ENABLED" : "DISABLED"}</span>
+          <span class="text-neutral-400">Overlay Status:</span>
+          <span class="{buttPanelState.hasOverlay ? 'text-green-400' : 'text-yellow-400'} uppercase">{buttPanelState.hasOverlay ? "Enabled" : "Disabled"}</span>
         </div>
       </div>
     </div>
@@ -343,7 +339,7 @@
   <div class="fixed bottom-20 right-10 w-72 bg-black/10 border border-gray-100/30 rounded z-20 pointer-events-auto">
     <div class="p-4">
       <div class="flex items-center justify-between mb-4">
-        <span class="text-gray-100 text-sm font-mono uppercase tracking-wider">Security Controls</span>
+        <span class="text-neutral-100 text-sm font-mono uppercase tracking-wider">Security Controls</span>
         <div class="flex space-x-1">
           <div class="w-1.5 h-1.5 {securitySystem.statusLightColors[0]} rounded-full animate-pulse"></div>
           <div class="w-1.5 h-1.5 {securitySystem.statusLightColors[1]} rounded-full animate-pulse" style="animation-delay: 0.5s;"></div>
@@ -357,22 +353,22 @@
 
       <!-- Control Buttons -->
       <div class="space-y-3">
-        <button class="w-full px-4 py-3 bg-white/5 border border-gray-100/20 rounded text-gray-100 font-mono text-xs uppercase tracking-wide transition-all duration-200 active:scale-[0.98] {securitySystem.keyButtonDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 hover:border-gray-100/40'}" onclick={() => securitySystem.connectKey()} disabled={securitySystem.keyButtonDisabled}>
+        <button class="w-full px-4 py-3 bg-white/5 border border-gray-100/20 rounded text-neutral-100 font-mono text-xs uppercase tracking-wide transition-all duration-200 active:scale-[0.98] {securitySystem.keyButtonDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 hover:border-gray-100/40'}" onclick={() => securitySystem.connectKey()} disabled={securitySystem.keyButtonDisabled}>
           {securitySystem.keyButtonText}
         </button>
 
-        <button class="w-full px-4 py-3 bg-white/5 border border-gray-100/20 rounded text-gray-100 font-mono text-xs uppercase tracking-wide transition-all duration-200 active:scale-[0.98] {securitySystem.protocolButtonDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 hover:border-gray-100/40'}" onclick={() => securitySystem.toggleProtocol()} disabled={securitySystem.protocolButtonDisabled}>
+        <button class="w-full px-4 py-3 bg-white/5 border border-gray-100/20 rounded text-neutral-100 font-mono text-xs uppercase tracking-wide transition-all duration-200 active:scale-[0.98] {securitySystem.protocolButtonDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 hover:border-gray-100/40'}" onclick={() => securitySystem.toggleProtocol()} disabled={securitySystem.protocolButtonDisabled}>
           {securitySystem.protocolButtonText}
         </button>
 
         <!-- Status indicators -->
         <div class="pt-2 border-t border-gray-100/10">
           <div class="flex justify-between text-xs font-mono uppercase">
-            <span class="text-gray-400">Key Status:</span>
+            <span class="text-neutral-400">Key Status:</span>
             <span class={securitySystem.keyStatusColor}>{securitySystem.keyStatusText}</span>
           </div>
           <div class="flex justify-between text-xs font-mono uppercase mt-1">
-            <span class="text-gray-400">Protocol:</span>
+            <span class="text-neutral-400">Protocol:</span>
             <span class={securitySystem.protocolStatusColor}>{securitySystem.protocolStatusText}</span>
           </div>
         </div>
