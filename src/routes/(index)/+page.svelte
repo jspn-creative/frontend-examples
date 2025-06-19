@@ -18,6 +18,7 @@
     tags?: string[];
     featured?: boolean;
     hidden?: boolean;
+    screenshot?: string; // Screenshot image for the route
   };
 
   let routes = $state<Route[]>([]);
@@ -526,7 +527,11 @@
                     <div class="w-full h-full absolute inset-0 z-10 opacity-70 bg-gradient-to-b from-transparent via-transparent to-zinc-950/80 group-hover:opacity-0 transition-opacity duration-300"></div>
                     <div class="w-full h-full absolute inset-0 z-[5] opacity-80 group-hover:opacity-0 transition-all duration-300 pattern"></div>
 
-                    {#if visiblePreviews.has(i) || isCurrentRoute(route.path)}
+                    {#if route.screenshot}
+                      <!-- Use screenshot if available -->
+                      <img src={route.screenshot} alt="Preview of {route.name}" class="w-full h-full object-cover" />
+                    {:else if visiblePreviews.has(i) || isCurrentRoute(route.path)}
+                      <!-- Fallback to iframe for routes without screenshots -->
                       <iframe src={route.path} title={route.name} class="w-[200%] h-[200%] scale-[0.5] origin-top-left border-0 pointer-events-none" loading="lazy" sandbox="allow-scripts"></iframe>
                     {:else}
                       <div class="absolute inset-0 flex items-center justify-center bg-zinc-900">
@@ -770,13 +775,17 @@
                 {/if}
 
                 <!-- Show spinner while loading -->
-                {#if !previewsLoaded[i]}
+                {#if !previewsLoaded[i] && !route.screenshot}
                   <div class="absolute inset-0 flex items-center justify-center">
                     <div class="w-6 h-6 rounded-full border border-zinc-700 border-t-primary animate-spin"></div>
                   </div>
                 {/if}
 
-                {#if hoveredRoutes.includes(i)}
+                {#if route.screenshot}
+                  <!-- Use screenshot if available -->
+                  <img src={route.screenshot} alt="Preview of {route.name}" class="w-full h-full object-cover" onload={() => handleIframeLoad(i)} />
+                {:else if hoveredRoutes.includes(i)}
+                  <!-- Fallback to iframe for routes without screenshots -->
                   <iframe src={route.path} title={route.name} class="w-[250%] h-[250%] scale-[0.4] origin-top-left border-0 pointer-events-none" loading="lazy" sandbox="allow-scripts" onload={() => handleIframeLoad(i)}></iframe>
                 {/if}
 
