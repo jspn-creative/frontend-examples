@@ -44,6 +44,8 @@
 		"wrangler": "^4.18.0"
 	},
 	"dependencies": {
+		"@fontsource-variable/fraunces": "^5.0.21",
+		"@fontsource/birthstone-bounce": "^5.0.20",
 		"@fontsource-variable/bodoni-moda": "^5.2.5",
 		"@fontsource-variable/dm-sans": "^5.2.5",
 		"@fontsource-variable/space-grotesk": "^5.2.6",
