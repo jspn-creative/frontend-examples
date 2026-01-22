@@ -294,7 +294,7 @@
 </div>
 
 {#snippet dataPanel()}
-  <div class="fixed bottom-20 left-10 w-72 bg-black/10 border border-gray-100/30 rounded z-20 pointer-events-auto">
+  <div class="hidden md:block fixed bottom-20 left-10 w-72 bg-black/10 border border-gray-100/30 rounded z-20 pointer-events-auto">
     <div class="p-4">
       <div class="flex items-center justify-between mb-3">
         <span class="text-neutral-100 text-sm font-mono uppercase tracking-wider">System Metrics</span>
@@ -336,7 +336,7 @@
 {/snippet}
 
 {#snippet controlPanel()}
-  <div class="fixed bottom-20 right-10 w-72 bg-black/10 border border-gray-100/30 rounded z-20 pointer-events-auto">
+  <div class="hidden md:block fixed bottom-20 right-10 w-72 bg-black/10 border border-gray-100/30 rounded z-20 pointer-events-auto">
     <div class="p-4">
       <div class="flex items-center justify-between mb-4">
         <span class="text-neutral-100 text-sm font-mono uppercase tracking-wider">Security Controls</span>
