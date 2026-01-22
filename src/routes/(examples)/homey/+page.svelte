@@ -42,7 +42,7 @@
 {@render newsletter()}
 
 {#snippet hero()}
-  <div bind:this={ref} class="relative flex h-[145rem] flex-col self-auto overflow-hidden py-4 antialiased [perspective:1000px] [transform-style:preserve-3d]">
+  <div bind:this={ref} class="relative flex h-[145rem] flex-col self-auto overflow-hidden py-4 antialiased [perspective:1000px] [transform-style:preserve-3d] bg-background">
     <div class="pointer-events-none relative left-0 top-[20vh] z-10 mx-auto w-full container">
       <h1 class="md:text-left text-center relative font-fraunces text-5xl font-normal [text-wrap:balance] tracking-tight text-stone-700 sm:text-6xl/tight">
         We'll get you from <br /><span class="text-stone-500 font-semibold italic">“<span class="decoration-stone-400/80 underline">just listed</span>” </span>

@@ -43,7 +43,7 @@
       </ul>
     </div>
     <div class="flex items-center space-x-4">
-      <div class="relative">
+      <div class="relative hidden md:block">
         <Menubar.Root>
           <Menubar.Menu>
             <Menubar.Trigger><LifeBuoy class="mr-1 w-4 h-4" />Other Resources <ChevronDown class="ml-1 w-4 h-4" /></Menubar.Trigger>
@@ -77,7 +77,7 @@
         {#if showOtherServices}
           <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
             {#each resources as resource}
-              <a href="#{resource.toLowerCase()}" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-100">{resource}</a>
+              <a href="#{resource.toLowerCase()}" class="block px-4 py-2 text-sm leading-none text-stone-700 hover:bg-stone-100">{resource}</a>
             {/each}
           </div>
         {/if}
