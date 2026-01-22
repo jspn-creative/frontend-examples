@@ -3,6 +3,8 @@
 </script>
 
 <script lang="ts">
+  import { goto } from "$app/navigation";
+  import { page } from "$app/state";
   import { getSwitcherState } from "./SwitcherState.svelte";
   const switcherState = getSwitcherState();
 
@@ -17,6 +19,11 @@
     const selectedHero = switcherState.heroOptions.find((option: Hero) => option.name === v);
     if (selectedHero) {
       switcherState.setActiveHero(selectedHero);
+      
+      // Update URL to persist selection
+      const url = new URL(page.url);
+      url.searchParams.set("hero", selectedHero.name);
+      goto(url.toString(), { replaceState: true, noScroll: true, keepFocus: true });
     }
   }
 </script>

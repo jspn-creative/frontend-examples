@@ -58,7 +58,16 @@ export const getSwitcherState = (key = DEFAULT_KEY) => {
   return getContext<SwitcherState>(key);
 };
 
-export const setSwitcherState = (key = DEFAULT_KEY) => {
+export const setSwitcherState = (initialHeroName?: string, key = DEFAULT_KEY) => {
   const switcherState = new SwitcherStateClass();
+
+  // Set initial hero from URL param if provided
+  if (initialHeroName) {
+    const hero = heroes.find((h) => h.name === initialHeroName);
+    if (hero) {
+      switcherState.activeHero = hero;
+    }
+  }
+
   return setContext(key, switcherState);
 };
