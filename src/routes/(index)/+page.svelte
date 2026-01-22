@@ -26,6 +26,11 @@
   let error = $state<string | null>(null);
   let isGridView = $state(false);
   let showPreviews = $state(true);
+  let prefsLoaded = $state(false);
+  
+  // Storage keys for persisting view preferences
+  const STORAGE_KEY_GRID_VIEW = "routes-page-grid-view";
+  const STORAGE_KEY_SHOW_PREVIEWS = "routes-page-show-previews";
   let mouseX = $state(0);
   let mouseY = $state(0);
   let hoveredRouteIndex = $state<number | null>(null);
@@ -145,7 +150,32 @@
     }
   });
 
+  // Persist view preferences to localStorage (only after initial load)
+  $effect(() => {
+    if (prefsLoaded && typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_KEY_GRID_VIEW, String(isGridView));
+    }
+  });
+
+  $effect(() => {
+    if (prefsLoaded && typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_KEY_SHOW_PREVIEWS, String(showPreviews));
+    }
+  });
+
   onMount(() => {
+    // Load persisted view preferences from localStorage
+    const storedGridView = localStorage.getItem(STORAGE_KEY_GRID_VIEW);
+    const storedShowPreviews = localStorage.getItem(STORAGE_KEY_SHOW_PREVIEWS);
+    
+    if (storedGridView !== null) {
+      isGridView = storedGridView === "true";
+    }
+    if (storedShowPreviews !== null) {
+      showPreviews = storedShowPreviews === "true";
+    }
+    prefsLoaded = true;
+    
     previewObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
